@@ -51,6 +51,8 @@ model User {
   image String? 
   accounts Account[]
   sessions Session[]
+  trainingSessions TrainingSession[]
+  checkIns         CheckIn[]   
 
   memberships Membership[]
 }
@@ -62,6 +64,8 @@ model Gym {
   updatedAt   DateTime     @updatedAt
 
   memberships Membership[]
+  trainingSessions TrainingSession[]
+  checkIns         CheckIn[]   
 }
 
 model Membership {
@@ -75,6 +79,37 @@ model Membership {
 
   @@unique([userId, gymId])
   @@index([gymId])
+}
+
+model TrainingSession {
+  id        String       @id @default(cuid())
+  userId    String
+  gymId     String
+  duration  Int
+  intensity Int
+  type      String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gym Gym @relation(fields: [gymId], references: [id], onDelete: Cascade)      
+
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model CheckIn {
+  id        String       @id @default(cuid())
+  userId    String
+  gymId     String
+  sleep     Int
+  soreness  Int
+  injury    Boolean
+  stress    Int
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gym Gym @relation(fields: [gymId], references: [id], onDelete: Cascade)      
+
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 }
 
 enum Role {
