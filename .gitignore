@@ -45,8 +45,6 @@ next-env.d.ts
 # internal docs
 /docs/internal/
 
-# generated
-/src
 
 #claude
 CLAUDE.md
