@@ -22,12 +22,12 @@ export type ReadinessConfig = {
 
 export const DEFAULT_READINESS_CONFIG: ReadinessConfig = {
   sleepWeight: 1.0,
-  sorenessWeight: 1.0,
-  stressWeight: 1.0,
+  sorenessWeight: .3,
+  stressWeight: .2,
   injuryPenalty: 30,
 }
 
-// TODO(human): implement calcLoad
+
 export function calcLoad(
   duration: number,
   intensity: number,
@@ -39,7 +39,6 @@ export function calcLoad(
   return duration * intensity * multiplier
 }
 
-// TODO(human): implement calcReadiness
 export function calcReadiness(
   sleep: number,
   soreness: number,
@@ -47,5 +46,11 @@ export function calcReadiness(
   injury: boolean,
   config: ReadinessConfig = DEFAULT_READINESS_CONFIG
 ): number {
-  throw new Error("Not implemented")
+  const sleepScore = (10 - sleep) * config.sleepWeight
+  const sorenessScore = soreness * config.sorenessWeight
+  const stressScore = stress * config.stressWeight
+  const injuryScore = injury ? config.injuryPenalty: 0
+
+  return Math.max(0, Math.min(100, 100 - sleepScore - sorenessScore - stressScore - injuryScore))
+
 }
