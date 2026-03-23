@@ -2,6 +2,7 @@ import { NextRequest } from "next/server"
 import { z } from "zod"
 import { auth } from "@/auth"
 import { requireGymMember } from "@/lib/auth-guards"
+import { Role } from "@/generated/prisma/enums"
 import prisma from "@/lib/prisma"
 
 const sessionSchema = z.object({
@@ -33,4 +34,30 @@ export async function POST(req: NextRequest) {
   const record = await prisma.trainingSession.create({data: {userId: session.user.id, gymId: result.data.gymId, duration: result.data.duration, intensity: result.data.intensity, type: result.data.type}})
 
   return Response.json(record)
+}
+
+
+export async function GET(req: NextRequest) {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  const IDofGym = req.nextUrl.searchParams.get("gymId")
+
+  if (!IDofGym) {
+    return Response.json({ error: "No gym Id" }, { status: 400 })
+  }
+
+  const guard = await requireGymMember(session.user.id, IDofGym, Role.COACH)
+
+  if (!guard.ok) {
+    return Response.json({ error: "forbidden"} , {status: guard.status });
+  }
+
+  const record = await prisma.trainingSession.findMany( {where: {gymId: IDofGym}})
+
+  return Response.json(record)
+
 }
