@@ -69,10 +69,11 @@ model Gym {
 }
 
 model Membership {
-  id        String @id @default(cuid())
+  id        String           @id @default(cuid())
   userId    String
   gymId     String
-  role      Role   @default(ATHLETE)
+  role      Role             @default(ATHLETE)
+  status    MembershipStatus @default(PENDING)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   gym  Gym  @relation(fields: [gymId], references: [id], onDelete: Cascade)
@@ -116,4 +117,9 @@ enum Role {
   ATHLETE
   COACH
   ADMIN
+}
+
+enum MembershipStatus {
+  PENDING
+  ACTIVE
 }

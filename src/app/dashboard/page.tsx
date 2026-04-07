@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import prisma from "@/lib/prisma"
 import { calcLoad, calcReadiness } from "@/lib/scoring"
+import PendingRequests from "./PendingRequests"
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -14,6 +15,7 @@ export default async function DashboardPage() {
     where: {
       userId: session.user.id,
       role: { in: ["COACH", "ADMIN"] },
+      status: "ACTIVE",
     },
     include: { gym: true },
   })
@@ -25,6 +27,13 @@ export default async function DashboardPage() {
       </main>
     )
   }
+
+  const pendingRequests = membership.role === "ADMIN"
+    ? await prisma.membership.findMany({
+        where: { gymId: membership.gymId, status: "PENDING" },
+        include: { user: { select: { id: true, name: true, email: true } } },
+      })
+    : []
 
   const [sessions, checkins] = await Promise.all([
     prisma.trainingSession.findMany({
@@ -42,6 +51,8 @@ export default async function DashboardPage() {
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
       <h1 className="mb-8 text-2xl font-semibold">{membership.gym.name} — Coach Dashboard</h1>
+
+      <PendingRequests requests={pendingRequests} />
 
       <section className="mb-10">
         <h2 className="mb-4 text-lg font-medium">Training Sessions</h2>

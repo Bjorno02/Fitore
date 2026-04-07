@@ -12,13 +12,19 @@ export default async function Home() {
 
   const membership = await prisma.membership.findFirst({
     where: { userId: session.user.id },
+    include: { gym: true },
   })
 
   if (!membership) {
+    redirect("/onboarding")
+  }
+
+  if (membership.status === "PENDING") {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center gap-4">
         <h1 className="text-2xl font-semibold">MartialOps</h1>
-        <p className="text-zinc-500">You are not a member of any gym.</p>
+        <p className="text-zinc-600">Your request to join <span className="font-medium">{membership.gym.name}</span> is pending.</p>
+        <p className="text-sm text-zinc-400">The coach will review it soon.</p>
       </main>
     )
   }

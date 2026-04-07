@@ -19,7 +19,7 @@ export async function requireGymMember(
     where: { userId_gymId: { userId, gymId}}
   })
   
-  if (!membership) {
+  if (!membership || membership.status !== "ACTIVE") {
     return { ok: false, status: 403}
   }
 
