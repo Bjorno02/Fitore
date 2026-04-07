@@ -7,7 +7,7 @@ export default async function AthletePage() {
   const session = await auth()
 
   if (!session?.user?.id) {
-    redirect("/api/auth/signin")
+    redirect("/login")
   }
 
   const membership = await prisma.membership.findFirst({
@@ -16,12 +16,15 @@ export default async function AthletePage() {
   })
 
   if (!membership) {
-    return <p>You are not a member of any gym.</p>
+    return <p className="text-text-muted p-6">You are not a member of any gym.</p>
   }
 
   return (
-    <main>
-      <h1>{membership.gym.name}</h1>
+    <main className="mx-auto max-w-xl px-6 py-10">
+      <div className="mb-8">
+        <p className="text-text-muted text-xs tracking-widest uppercase mb-1">{membership.gym.name}</p>
+        <h1 className="wordmark text-3xl text-blue-900 tracking-wide">Training Log</h1>
+      </div>
       <AthleteForm gymId={membership.gymId} />
     </main>
   )

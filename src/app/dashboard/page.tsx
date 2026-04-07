@@ -6,24 +6,17 @@ import PendingRequests from "./PendingRequests"
 
 export default async function DashboardPage() {
   const session = await auth()
-
-  if (!session?.user?.id) {
-    redirect("/api/auth/signin")
-  }
+  if (!session?.user?.id) redirect("/login")
 
   const membership = await prisma.membership.findFirst({
-    where: {
-      userId: session.user.id,
-      role: { in: ["COACH", "ADMIN"] },
-      status: "ACTIVE",
-    },
+    where: { userId: session.user.id, role: { in: ["COACH", "ADMIN"] }, status: "ACTIVE" },
     include: { gym: true },
   })
 
   if (!membership) {
     return (
       <main className="flex min-h-screen items-center justify-center">
-        <p className="text-zinc-500">You are not a coach at any gym.</p>
+        <p className="text-text-muted">You are not a coach at any gym.</p>
       </main>
     )
   }
@@ -49,36 +42,51 @@ export default async function DashboardPage() {
   ])
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12">
-      <h1 className="mb-8 text-2xl font-semibold">{membership.gym.name} — Coach Dashboard</h1>
+    <main className="mx-auto max-w-3xl px-6 py-10">
+      <div className="mb-8 frost-enter">
+        <p className="frost-label mb-1">Coach Dashboard</p>
+        <h1 className="wordmark text-3xl text-blue-900 tracking-wide">{membership.gym.name}</h1>
+      </div>
 
-      <PendingRequests requests={pendingRequests} />
+      <div className="frost-enter-2">
+        <PendingRequests requests={pendingRequests} />
+      </div>
 
-      <section className="mb-10">
-        <h2 className="mb-4 text-lg font-medium">Training Sessions</h2>
-        <div className="flex flex-col gap-3">
-          {sessions.map(s => (
-            <div key={s.id} className="flex items-center justify-between rounded-lg border px-4 py-3">
-              <span className="font-medium">{s.user.name ?? s.user.email}</span>
-              <span className="text-sm text-zinc-500">{s.type} · {s.duration}min · intensity {s.intensity}</span>
-              <span className="font-mono text-sm">Load: {calcLoad(s.duration, s.intensity, s.type).toFixed(0)}</span>
+      {/* Training Sessions */}
+      <section className="mb-6 frost-enter-3">
+        <p className="frost-label mb-3">Training Sessions</p>
+        <div className="frost-card rounded-xl overflow-hidden">
+          {sessions.length === 0 ? (
+            <p className="text-text-muted text-sm px-5 py-4">No sessions logged yet.</p>
+          ) : sessions.map((s, i) => (
+            <div key={s.id} className={`flex items-center justify-between px-5 py-3.5 ${i !== sessions.length - 1 ? "frost-row" : ""}`}>
+              <span className="font-semibold text-text-primary text-sm w-32 truncate">{s.user.name ?? s.user.email}</span>
+              <span className="text-text-secondary text-xs">{s.type} · {s.duration}min · ×{s.intensity}</span>
+              <span className="badge-load text-xs px-3 py-1 rounded-lg">
+                Load {calcLoad(s.duration, s.intensity, s.type).toFixed(0)}
+              </span>
             </div>
           ))}
-          {sessions.length === 0 && <p className="text-zinc-400">No sessions logged yet.</p>}
         </div>
       </section>
 
-      <section>
-        <h2 className="mb-4 text-lg font-medium">Check-ins</h2>
-        <div className="flex flex-col gap-3">
-          {checkins.map(c => (
-            <div key={c.id} className="flex items-center justify-between rounded-lg border px-4 py-3">
-              <span className="font-medium">{c.user.name ?? c.user.email}</span>
-              <span className="text-sm text-zinc-500">sleep {c.sleep} · soreness {c.soreness} · stress {c.stress}{c.injury ? " · injured" : ""}</span>
-              <span className="font-mono text-sm">Readiness: {calcReadiness(c.sleep, c.soreness, c.stress, c.injury).toFixed(0)}</span>
+      {/* Check-ins */}
+      <section className="frost-enter-4">
+        <p className="frost-label mb-3">Check-ins</p>
+        <div className="frost-card rounded-xl overflow-hidden">
+          {checkins.length === 0 ? (
+            <p className="text-text-muted text-sm px-5 py-4">No check-ins yet.</p>
+          ) : checkins.map((c, i) => (
+            <div key={c.id} className={`flex items-center justify-between px-5 py-3.5 ${i !== checkins.length - 1 ? "frost-row" : ""}`}>
+              <span className="font-semibold text-text-primary text-sm w-32 truncate">{c.user.name ?? c.user.email}</span>
+              <span className="text-text-secondary text-xs">
+                sleep {c.sleep} · soreness {c.soreness} · stress {c.stress}{c.injury ? " · inj." : ""}
+              </span>
+              <span className="badge-load text-xs px-3 py-1 rounded-lg">
+                Readiness {calcReadiness(c.sleep, c.soreness, c.stress, c.injury).toFixed(0)}
+              </span>
             </div>
           ))}
-          {checkins.length === 0 && <p className="text-zinc-400">No check-ins yet.</p>}
         </div>
       </section>
     </main>

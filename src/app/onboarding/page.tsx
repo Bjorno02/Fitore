@@ -3,25 +3,21 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 
-const inputClass = "w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
-const labelClass = "text-sm font-medium text-zinc-700"
-
 type Gym = { id: string; name: string }
 
 export default function OnboardingPage() {
   const router = useRouter()
 
-  // Create gym state
   const [gymName, setGymName] = useState("")
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
 
-  // Search state
   const [search, setSearch] = useState("")
   const [results, setResults] = useState<Gym[]>([])
   const [searching, setSearching] = useState(false)
   const [requestedId, setRequestedId] = useState<string | null>(null)
   const [requestError, setRequestError] = useState<string | null>(null)
+  const [searched, setSearched] = useState(false)
 
   async function handleCreate(e: React.SyntheticEvent) {
     e.preventDefault()
@@ -44,10 +40,12 @@ export default function OnboardingPage() {
   async function handleSearch(e: React.SyntheticEvent) {
     e.preventDefault()
     setSearching(true)
+    setSearched(false)
     const res = await fetch(`/api/gyms?search=${encodeURIComponent(search)}`)
     const data = await res.json().catch(() => [])
     setResults(data)
     setSearching(false)
+    setSearched(true)
   }
 
   async function handleRequest(gymId: string) {
@@ -64,85 +62,70 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main className="mx-auto max-w-lg px-6 py-16 flex flex-col gap-10">
-      <div>
-        <h1 className="text-2xl font-semibold">Welcome to MartialOps</h1>
-        <p className="mt-1 text-sm text-zinc-500">Create a gym or find one to join.</p>
-      </div>
+    <main className="min-h-screen flex items-center justify-center px-6 py-16">
+      <div className="w-full max-w-md flex flex-col gap-6">
 
-      {/* Create gym */}
-      <section className="rounded-lg border p-6">
-        <h2 className="mb-4 text-lg font-medium">Create a gym</h2>
-        <form onSubmit={handleCreate} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1">
-            <label className={labelClass}>Gym name</label>
-            <input
-              type="text"
-              className={inputClass}
-              value={gymName}
-              onChange={e => setGymName(e.target.value)}
-              placeholder="e.g. Downtown BJJ"
-            />
+        <div className="text-center frost-enter">
+          <p className="wordmark-frost text-4xl tracking-widest">MartialOps</p>
+          <p className="text-text-muted text-sm mt-3">Create a gym or request to join one.</p>
+        </div>
+
+        <div className="w-20 h-px mx-auto frost-enter"
+          style={{ background: "linear-gradient(90deg, transparent, #2563eb, transparent)" }} />
+
+        <section className="frost-card rounded-xl overflow-hidden frost-enter-2">
+          <div className="frost-card-header px-6 py-3.5">
+            <p className="frost-label">Create a gym</p>
           </div>
-          {createError && <p className="text-sm text-red-600">{createError}</p>}
-          <button
-            type="submit"
-            disabled={creating || !gymName.trim()}
-            className="rounded-lg bg-black px-4 py-2 text-sm text-white hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {creating ? "Creating…" : "Create gym"}
-          </button>
-        </form>
-      </section>
-
-      {/* Find a gym */}
-      <section className="rounded-lg border p-6">
-        <h2 className="mb-4 text-lg font-medium">Find a gym</h2>
-        <form onSubmit={handleSearch} className="flex gap-2 mb-4">
-          <input
-            type="text"
-            className={inputClass}
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search by name…"
-          />
-          <button
-            type="submit"
-            disabled={searching}
-            className="rounded-lg border px-4 py-2 text-sm hover:bg-zinc-100 disabled:opacity-50 shrink-0"
-          >
-            {searching ? "…" : "Search"}
-          </button>
-        </form>
-
-        {requestError && <p className="mb-3 text-sm text-red-600">{requestError}</p>}
-
-        {results.length > 0 ? (
-          <div className="flex flex-col gap-3">
-            {results.map(gym => (
-              <div key={gym.id} className="flex items-center justify-between rounded-lg border px-4 py-3">
-                <span className="font-medium">{gym.name}</span>
-                <button
-                  onClick={() => handleRequest(gym.id)}
-                  disabled={requestedId !== null}
-                  className="rounded-lg bg-black px-3 py-1 text-sm text-white hover:bg-zinc-800 disabled:opacity-50"
-                >
-                  {requestedId === gym.id ? "Requesting…" : "Request to Join"}
-                </button>
+          <div className="px-6 py-5 flex flex-col gap-4">
+            <form onSubmit={handleCreate} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="frost-label">Gym name</label>
+                <input type="text" className="frost-input" value={gymName}
+                  onChange={e => setGymName(e.target.value)} placeholder="e.g. Downtown BJJ" />
               </div>
-            ))}
+              {createError && <p className="text-sm" style={{ color: "#dc2626" }}>{createError}</p>}
+              <button type="submit" disabled={creating || !gymName.trim()} className="btn-frost-primary">
+                {creating ? "Creating…" : "Create gym"}
+              </button>
+            </form>
           </div>
-        ) : search && !searching ? (
-          <p className="text-sm text-zinc-400">No gyms found.</p>
-        ) : null}          
+        </section>
 
-        {/* TODO(human): render the search results list here.
-            `results` is Gym[] — each has { id: string, name: string }.
-            For each gym, show the gym name and a "Request to Join" button.
-            The button should call handleRequest(gym.id).
-            Disable it while requestedId is set (a request is in flight).
-            If results is empty and a search was made, show "No gyms found." */}
-      </section>
+        <section className="frost-card rounded-xl overflow-hidden frost-enter-3">
+          <div className="frost-card-header px-6 py-3.5">
+            <p className="frost-label">Find a gym</p>
+          </div>
+          <div className="px-6 py-5 flex flex-col gap-4">
+            <form onSubmit={handleSearch} className="flex gap-2">
+              <input type="text" className="frost-input" value={search}
+                onChange={e => setSearch(e.target.value)} placeholder="Search by name…" />
+              <button type="submit" disabled={searching} className="btn-frost-ghost shrink-0">
+                {searching ? "…" : "Search"}
+              </button>
+            </form>
+
+            {requestError && <p className="text-sm" style={{ color: "#dc2626" }}>{requestError}</p>}
+
+            {results.length > 0 ? (
+              <div className="frost-card rounded-lg overflow-hidden">
+                {results.map((gym, i) => (
+                  <div key={gym.id}
+                    className={`flex items-center justify-between px-4 py-3 ${i !== results.length - 1 ? "frost-row" : ""}`}>
+                    <span className="font-semibold text-text-primary text-sm">{gym.name}</span>
+                    <button onClick={() => handleRequest(gym.id)} disabled={requestedId !== null}
+                      className="btn-frost-primary text-xs px-3 py-1.5">
+                      {requestedId === gym.id ? "Requesting…" : "Request to Join"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : searched && !searching ? (
+              <p className="text-text-muted text-sm text-center py-2">No gyms found.</p>
+            ) : null}
+          </div>
+        </section>
+      </div>
     </main>
   )
 }

@@ -27,25 +27,22 @@ export default function PendingRequests({ requests }: { requests: Request[] }) {
   }
 
   return (
-    <section className="mb-10">
-      <h2 className="mb-4 text-lg font-medium">Pending Requests</h2>
-      <div className="flex flex-col gap-3">
-        {requests.map(r => (
-          <div key={r.userId} className="flex items-center justify-between rounded-lg border px-4 py-3">
-            <span className="font-medium">{r.user.name ?? r.user.email}</span>
+    <section className="mb-6">
+      <div className="flex items-center gap-3 mb-3">
+        <p className="frost-label">Pending Requests</p>
+        <span className="badge-load text-xs px-2.5 py-0.5 rounded-full">{requests.length}</span>
+      </div>
+      <div className="frost-card rounded-xl overflow-hidden">
+        {requests.map((r, i) => (
+          <div key={r.userId} className={`flex items-center justify-between px-5 py-3.5 ${i !== requests.length - 1 ? "frost-row" : ""}`}>
+            <span className="font-semibold text-text-primary text-sm">{r.user.name ?? r.user.email}</span>
             <div className="flex gap-2">
-              <button
-                onClick={() => handleAction(r.userId, r.gymId, "approve")}
-                disabled={loading !== null}
-                className="rounded-lg bg-black px-3 py-1 text-sm text-white hover:bg-zinc-800 disabled:opacity-50"
-              >
+              <button onClick={() => handleAction(r.userId, r.gymId, "approve")} disabled={loading !== null}
+                className="btn-frost-primary text-xs px-4 py-1.5">
                 {loading === `${r.userId}-approve` ? "…" : "Approve"}
               </button>
-              <button
-                onClick={() => handleAction(r.userId, r.gymId, "deny")}
-                disabled={loading !== null}
-                className="rounded-lg border px-3 py-1 text-sm hover:bg-zinc-100 disabled:opacity-50"
-              >
+              <button onClick={() => handleAction(r.userId, r.gymId, "deny")} disabled={loading !== null}
+                className="btn-frost-ghost text-xs px-4 py-1.5">
                 {loading === `${r.userId}-deny` ? "…" : "Deny"}
               </button>
             </div>
