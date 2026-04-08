@@ -14,18 +14,12 @@ export default async function Navbar() {
   const isCoach = membership?.role === "COACH" || membership?.role === "ADMIN"
 
   return (
-    <nav
-      className="border-b-2 border-nav-stripe px-6 flex items-stretch justify-between"
-      style={{
-        background: "linear-gradient(180deg, #0a1628 0%, #0f1c2e 100%)",
-        boxShadow: "0 4px 24px rgba(10, 22, 40, 0.4), 0 1px 0 rgba(37, 99, 235, 0.3)",
-      }}
-    >
-      <div className="flex items-stretch gap-8">
-        <Link href="/" className="wordmark-frost text-lg flex items-center py-3.5">
+    <nav className="nav-bar px-8 flex items-stretch justify-between">
+      <div className="flex items-stretch gap-10">
+        <Link href="/" className="wordmark-frost text-xl flex items-center py-5 tracking-widest">
           MartialOps
         </Link>
-        <div className="flex items-stretch gap-1">
+        <div className="flex items-stretch gap-0.5">
           <Link href="/athlete" className="nav-link">Log Training</Link>
           {isCoach && <Link href="/dashboard" className="nav-link">Dashboard</Link>}
         </div>

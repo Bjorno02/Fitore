@@ -1,7 +1,8 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import prisma from "@/lib/prisma"
-import Link from "next/link"
+import HomeHero from "./HomeHero"
+import HomeCards from "./HomeCards"
 
 export default async function Home() {
   const session = await auth()
@@ -16,13 +17,14 @@ export default async function Home() {
 
   if (membership.status === "PENDING") {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-4">
-        <p className="wordmark text-4xl text-blue-900 tracking-widest frost-enter">MartialOps</p>
-        <div className="w-16 h-px" style={{ background: "linear-gradient(90deg, transparent, #2563eb, transparent)" }} />
-        <div className="frost-card rounded-xl px-8 py-6 text-center frost-enter-2" style={{ maxWidth: 360 }}>
-          <p className="font-semibold text-text-primary">{membership.gym.name}</p>
-          <p className="text-text-secondary text-sm mt-1">Your request to join is pending.</p>
-          <p className="text-text-muted text-xs mt-1">The coach will review it soon.</p>
+      <main className="flex min-h-screen flex-col items-center justify-center gap-6 px-6">
+        <p className="wordmark-frost text-4xl tracking-widest frost-enter">MartialOps</p>
+        <div className="w-16 h-px frost-enter"
+          style={{ background: "linear-gradient(90deg, transparent, #84cc16, transparent)" }} />
+        <div className="frost-card rounded-2xl px-10 py-8 text-center frost-enter-2" style={{ maxWidth: 380 }}>
+          <p className="font-semibold text-lg mb-1">{membership.gym.name}</p>
+          <p className="text-text-secondary text-sm mt-1">Your request to join is pending approval.</p>
+          <p className="text-text-muted text-xs mt-2">The coach will review it soon.</p>
         </div>
       </main>
     )
@@ -31,18 +33,13 @@ export default async function Home() {
   const isCoach = membership.role === "COACH" || membership.role === "ADMIN"
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-8">
-      <div className="text-center frost-enter">
-        <p className="frost-label mb-2">Welcome back</p>
-        <h1 className="wordmark text-5xl text-blue-900 tracking-widest">{membership.gym.name}</h1>
-        <p className="text-text-secondary mt-2">{session.user.name}</p>
+    <main className="flex-1 flex flex-col lg:flex-row frost-enter" style={{ minHeight: 0 }}>
+      <div style={{ flex: 2, display: "flex", flexDirection: "column" }}>
+        <HomeHero gymName={membership.gym.name} userName={session.user.name} />
       </div>
-      <div className="w-20 h-px frost-enter" style={{ background: "linear-gradient(90deg, transparent, #2563eb, transparent)" }} />
-      <div className="flex gap-3 frost-enter-2">
-        <Link href="/athlete" className="btn-frost-primary">Log Training</Link>
-        {isCoach && (
-          <Link href="/dashboard" className="btn-frost-ghost">Coach Dashboard</Link>
-        )}
+      <div className="hidden lg:block metallic-strip" />
+      <div style={{ flex: 3, display: "flex", flexDirection: "column" }}>
+        <HomeCards isCoach={isCoach} />
       </div>
     </main>
   )

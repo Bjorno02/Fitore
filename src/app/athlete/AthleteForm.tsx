@@ -94,15 +94,15 @@ export default function AthleteForm({ gymId }: { gymId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-row gap-5 h-full">
 
-      <section className="frost-card rounded-xl overflow-hidden frost-enter">
+      <section className="frost-card rounded-xl overflow-hidden frost-enter flex-1 flex flex-col">
         <div className="frost-card-header px-6 py-3.5">
           <p className="frost-label">Log Training Session</p>
         </div>
-        <div className="px-6 py-5">
+        <div className="px-6 py-5 flex-1 flex flex-col">
           <StatusBanner successMsg={sessionStatus.successMsg} errorMsg={sessionStatus.errorMsg} />
-          <form onSubmit={handleSessionSubmit} className="flex flex-col gap-4">
+          <form onSubmit={handleSessionSubmit} className="flex flex-col gap-4 flex-1">
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="frost-label">Duration (min)</label>
@@ -124,20 +124,20 @@ export default function AthleteForm({ gymId }: { gymId: string }) {
                 ))}
               </select>
             </div>
-            <button type="submit" disabled={sessionLoading} className="btn-frost-primary">
+            <button type="submit" disabled={sessionLoading} className="btn-frost-primary mt-auto">
               {sessionLoading ? "Logging…" : "Log Session"}
             </button>
           </form>
         </div>
       </section>
 
-      <section className="frost-card rounded-xl overflow-hidden frost-enter-2">
+      <section className="frost-card rounded-xl overflow-hidden frost-enter-2 flex-1 flex flex-col">
         <div className="frost-card-header px-6 py-3.5">
           <p className="frost-label">Daily Check-in</p>
         </div>
-        <div className="px-6 py-5">
+        <div className="px-6 py-5 flex-1 flex flex-col">
           <StatusBanner successMsg={checkinStatus.successMsg} errorMsg={checkinStatus.errorMsg} />
-          <form onSubmit={handleCheckinSubmit} className="flex flex-col gap-4">
+          <form onSubmit={handleCheckinSubmit} className="flex flex-col gap-4 flex-1">
             <div className="grid grid-cols-3 gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="frost-label">Sleep</label>
@@ -161,7 +161,7 @@ export default function AthleteForm({ gymId }: { gymId: string }) {
                 className="w-4 h-4 rounded accent-blue-500" />
               <span className="frost-label group-hover:text-text-secondary transition-colors">Reporting injury</span>
             </label>
-            <button type="submit" disabled={checkinLoading} className="btn-frost-primary">
+            <button type="submit" disabled={checkinLoading} className="btn-frost-primary mt-auto">
               {checkinLoading ? "Submitting…" : "Submit Check-in"}
             </button>
           </form>

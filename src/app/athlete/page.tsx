@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import prisma from "@/lib/prisma"
 import AthleteForm from "./AthleteForm"
+import PageHeader from "@/components/PageHeader"
 
 export default async function AthletePage() {
   const session = await auth()
@@ -20,12 +21,17 @@ export default async function AthletePage() {
   }
 
   return (
-    <main className="mx-auto max-w-xl px-6 py-10">
-      <div className="mb-8">
-        <p className="text-text-muted text-xs tracking-widest uppercase mb-1">{membership.gym.name}</p>
-        <h1 className="wordmark text-3xl text-blue-900 tracking-wide">Training Log</h1>
+    <main className="flex-1 flex flex-col">
+      <PageHeader
+        label={membership.gym.name}
+        title="Training Log"
+        meta={session.user.name ?? undefined}
+      />
+      <div className="flex-1 px-6 py-8 overflow-hidden flex flex-col">
+        <div className="max-w-5xl mx-auto w-full flex-1 flex flex-col">
+          <AthleteForm gymId={membership.gymId} />
+        </div>
       </div>
-      <AthleteForm gymId={membership.gymId} />
     </main>
   )
 }
