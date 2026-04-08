@@ -1,24 +1,31 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import prisma from "@/lib/prisma"
-import Link from "next/link"
+import HomeHero from "./HomeHero"
+import HomeCards from "./HomeCards"
 
 export default async function Home() {
   const session = await auth()
-
-  if (!session?.user?.id) {
-    redirect("/api/auth/signin")
-  }
+  if (!session?.user?.id) redirect("/login")
 
   const membership = await prisma.membership.findFirst({
     where: { userId: session.user.id },
+    include: { gym: true },
   })
 
-  if (!membership) {
+  if (!membership) redirect("/onboarding")
+
+  if (membership.status === "PENDING") {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-4">
-        <h1 className="text-2xl font-semibold">MartialOps</h1>
-        <p className="text-zinc-500">You are not a member of any gym.</p>
+      <main className="flex min-h-screen flex-col items-center justify-center gap-6 px-6">
+        <p className="wordmark-frost text-4xl tracking-widest frost-enter">MartialOps</p>
+        <div className="w-16 h-px frost-enter"
+          style={{ background: "linear-gradient(90deg, transparent, #84cc16, transparent)" }} />
+        <div className="frost-card rounded-2xl px-10 py-8 text-center frost-enter-2" style={{ maxWidth: 380 }}>
+          <p className="font-semibold text-lg mb-1">{membership.gym.name}</p>
+          <p className="text-text-secondary text-sm mt-1">Your request to join is pending approval.</p>
+          <p className="text-text-muted text-xs mt-2">The coach will review it soon.</p>
+        </div>
       </main>
     )
   }
@@ -26,18 +33,13 @@ export default async function Home() {
   const isCoach = membership.role === "COACH" || membership.role === "ADMIN"
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6">
-      <h1 className="text-3xl font-semibold">MartialOps</h1>
-      <p className="text-zinc-500">Welcome, {session.user.name}</p>
-      <div className="flex gap-4">
-        <Link href="/athlete" className="rounded-lg bg-black px-5 py-2 text-white hover:bg-zinc-800">
-          Log Training
-        </Link>
-        {isCoach && (
-          <Link href="/dashboard" className="rounded-lg border px-5 py-2 hover:bg-zinc-100">
-            Coach Dashboard
-          </Link>
-        )}
+    <main className="flex-1 flex flex-col lg:flex-row frost-enter" style={{ minHeight: 0 }}>
+      <div style={{ flex: 2, display: "flex", flexDirection: "column" }}>
+        <HomeHero gymName={membership.gym.name} userName={session.user.name} />
+      </div>
+      <div className="hidden lg:block metallic-strip" />
+      <div style={{ flex: 3, display: "flex", flexDirection: "column" }}>
+        <HomeCards isCoach={isCoach} />
       </div>
     </main>
   )

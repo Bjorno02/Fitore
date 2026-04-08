@@ -15,6 +15,7 @@
 
 # next.js
 /.next/
+/tmp/
 /out/
 
 # production
@@ -48,5 +49,13 @@ next-env.d.ts
 
 #claude
 CLAUDE.md
-/.claude
+.claude
+
+#docs
+/docs
+
+.superpowers/
+
+
+
 

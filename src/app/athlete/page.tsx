@@ -2,12 +2,13 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import prisma from "@/lib/prisma"
 import AthleteForm from "./AthleteForm"
+import PageHeader from "@/components/PageHeader"
 
 export default async function AthletePage() {
   const session = await auth()
 
   if (!session?.user?.id) {
-    redirect("/api/auth/signin")
+    redirect("/login")
   }
 
   const membership = await prisma.membership.findFirst({
@@ -16,13 +17,21 @@ export default async function AthletePage() {
   })
 
   if (!membership) {
-    return <p>You are not a member of any gym.</p>
+    return <p className="text-text-muted p-6">You are not a member of any gym.</p>
   }
 
   return (
-    <main>
-      <h1>{membership.gym.name}</h1>
-      <AthleteForm gymId={membership.gymId} />
+    <main className="flex-1 flex flex-col">
+      <PageHeader
+        label={membership.gym.name}
+        title="Training Log"
+        meta={session.user.name ?? undefined}
+      />
+      <div className="flex-1 px-6 py-8 overflow-hidden flex flex-col">
+        <div className="max-w-5xl mx-auto w-full flex-1 flex flex-col">
+          <AthleteForm gymId={membership.gymId} />
+        </div>
+      </div>
     </main>
   )
 }
