@@ -13,12 +13,12 @@ type AthleteDay = {
     injury: boolean
     readiness: number
   }
-  session?: {
+  sessions: {
     type: string
     duration: number
     intensity: number
     load: number
-  }
+  }[]
 }
 
 type Props = {
@@ -215,29 +215,33 @@ export default function CalendarPanel({ gymId, initialMonthSummary, initialDate 
                   <span className="font-semibold text-sm text-text-primary">
                     {athlete.name ?? "Unknown"}
                   </span>
-                  <div className="flex gap-2">
-                    {athlete.checkIn && (
-                      <span className="text-xs px-2.5 py-0.5 rounded-lg"
-                        style={{ background: "rgba(34,197,94,0.12)", color: "#86efac" }}>
-                        {athlete.checkIn.readiness} ready
-                      </span>
-                    )}
-                    {athlete.session && (
-                      <span className="text-xs px-2.5 py-0.5 rounded-lg"
-                        style={{ background: "rgba(59,130,246,0.12)", color: "#93c5fd" }}>
-                        {athlete.session.load} load
-                      </span>
-                    )}
-                  </div>
+                  {athlete.checkIn && (
+                    <span className="text-xs px-2.5 py-0.5 rounded-lg"
+                      style={{ background: "rgba(34,197,94,0.12)", color: "#86efac" }}>
+                      {athlete.checkIn.readiness} ready
+                    </span>
+                  )}
                 </div>
-                <p className="text-xs" style={{ color: "rgba(148,163,184,0.82)" }}>
+                <p className="text-xs mb-1.5" style={{ color: "rgba(148,163,184,0.82)" }}>
                   {athlete.checkIn
                     ? `sleep ${athlete.checkIn.sleep} · soreness ${athlete.checkIn.soreness} · stress ${athlete.checkIn.stress}${athlete.checkIn.injury ? " · injury" : ""}`
                     : "no check-in"}
-                  {athlete.session
-                    ? ` · ${athlete.session.type} ${athlete.session.duration}min ×${athlete.session.intensity}`
-                    : " · no session"}
                 </p>
+                {athlete.sessions.length === 0 ? (
+                  <p className="text-xs" style={{ color: "rgba(148,163,184,0.45)" }}>no session</p>
+                ) : (
+                  athlete.sessions.map((s, si) => (
+                    <div key={si} className="flex items-center justify-between mt-1">
+                      <p className="text-xs" style={{ color: "rgba(148,163,184,0.82)" }}>
+                        {s.type} {s.duration}min ×{s.intensity}
+                      </p>
+                      <span className="text-xs px-2 py-0.5 rounded-lg"
+                        style={{ background: "rgba(59,130,246,0.12)", color: "#93c5fd" }}>
+                        {s.load} load
+                      </span>
+                    </div>
+                  ))
+                )}
               </div>
             ))
           )}

@@ -1,5 +1,5 @@
 export type ActivityDay = {
-  session?: { duration: number; intensity: number; type: string }
+  sessions: { duration: number; intensity: number; type: string }[]
   checkIn?: { sleep: number; soreness: number; stress: number; injury: boolean }
 }
 
@@ -20,12 +20,17 @@ export function buildActivityDays(
 
   for (const s of sessions) {
     const key = s.createdAt.toISOString().split("T")[0] // UTC date
-    map[key] = { ...map[key], session: { duration: s.duration, intensity: s.intensity, type: s.type } }
+    const existing = map[key] ?? { sessions: [] }
+    map[key] = {
+      ...existing,
+      sessions: [...existing.sessions, { duration: s.duration, intensity: s.intensity, type: s.type }],
+    }
   }
 
   for (const c of checkIns) {
     const key = c.createdAt.toISOString().split("T")[0] // UTC date
-    map[key] = { ...map[key], checkIn: { sleep: c.sleep, soreness: c.soreness, stress: c.stress, injury: c.injury } }
+    const existing = map[key] ?? { sessions: [] }
+    map[key] = { ...existing, checkIn: { sleep: c.sleep, soreness: c.soreness, stress: c.stress, injury: c.injury } }
   }
 
   return Object.entries(map).sort(([a], [b]) => b.localeCompare(a))

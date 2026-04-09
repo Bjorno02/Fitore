@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import prisma from "@/lib/prisma"
@@ -29,6 +30,15 @@ export default async function AthletePage() {
       />
       <div className="flex-1 px-6 py-8 overflow-hidden flex flex-col">
         <div className="max-w-5xl mx-auto w-full flex-1 flex flex-col">
+          <div className="flex justify-end mb-4">
+            <Link
+              href="/athlete/history"
+              className="text-xs font-semibold tracking-widest uppercase"
+              style={{ color: "rgba(132,204,22,0.78)" }}
+            >
+              View History →
+            </Link>
+          </div>
           <AthleteForm gymId={membership.gymId} />
         </div>
       </div>

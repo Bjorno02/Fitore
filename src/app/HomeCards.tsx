@@ -15,15 +15,6 @@ const CONTENT_GLOW: React.CSSProperties = {
   background: "radial-gradient(ellipse 80% 70% at 0% 100%, rgba(132,204,22,0.08) 0%, transparent 70%)",
 }
 
-/* Background ambient glow — top-right */
-const BG_GLOW_A: React.CSSProperties = {
-  background: "radial-gradient(ellipse 55% 45% at 90% 8%, rgba(132,204,22,0.10) 0%, transparent 70%)",
-}
-
-/* Background ambient glow — bottom-left */
-const BG_GLOW_B: React.CSSProperties = {
-  background: "radial-gradient(ellipse 45% 40% at 10% 92%, rgba(101,163,13,0.08) 0%, transparent 70%)",
-}
 
 function ActionCard({
   href, num, label, title, desc, accentA, accentB,
@@ -87,16 +78,10 @@ type Props = { isCoach: boolean }
 
 export default function HomeCards({ isCoach }: Props) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-12 py-14 frost-enter-2 relative overflow-hidden">
+    <div className="w-full frost-enter-3" style={{ maxWidth: 960 }}>
+      <div className="flex flex-col sm:flex-row gap-24">
 
-      {/* Ambient background glows */}
-      <div className="absolute inset-0 pointer-events-none" style={BG_GLOW_A} />
-      <div className="absolute inset-0 pointer-events-none" style={BG_GLOW_B} />
-
-      <div className="relative flex flex-col w-full" style={{ maxWidth: 440 }}>
-
-        <div className="flex flex-col gap-5">
-
+        <div className="flex-1">
           <ActionCard
             href="/athlete"
             num="01"
@@ -106,8 +91,10 @@ export default function HomeCards({ isCoach }: Props) {
             accentA="#18181b"
             accentB="#27272a"
           />
+        </div>
 
-          {isCoach && (
+        {isCoach && (
+          <div className="flex-1">
             <ActionCard
               href="/dashboard"
               num="02"
@@ -117,9 +104,9 @@ export default function HomeCards({ isCoach }: Props) {
               accentA="#141417"
               accentB="#1c1c1f"
             />
-          )}
+          </div>
+        )}
 
-        </div>
       </div>
     </div>
   )

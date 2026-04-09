@@ -6,17 +6,8 @@ const SESSION_DEFAULTS = { duration: "0", intensity: "0", type: "drilling" }
 const CHECKIN_DEFAULTS = { sleep: "0", soreness: "0", stress: "0", injury: false }
 const SESSION_TYPES = ["drilling", "sparring", "conditioning", "weights"] as const
 
-const NUM_PANEL: React.CSSProperties = {
-  background: "linear-gradient(160deg, #18181b 0%, #282830 100%)",
-}
-const NUM_SHEEN: React.CSSProperties = {
-  background: "linear-gradient(145deg, rgba(255,255,255,0.09) 0%, transparent 45%, rgba(0,0,0,0.15) 100%)",
-}
 const CONTENT_GLOW: React.CSSProperties = {
   background: "radial-gradient(ellipse 80% 70% at 0% 100%, rgba(132,204,22,0.05) 0%, transparent 70%)",
-}
-const HEADER_BG: React.CSSProperties = {
-  background: "linear-gradient(180deg, rgba(132,204,22,0.06) 0%, transparent 100%)",
 }
 
 function useFormStatus() {
@@ -52,35 +43,10 @@ function StatusBanner({ successMsg, errorMsg }: { successMsg: string | null; err
   return null
 }
 
-function CardHeader({ num, label }: { num: string; label: string }) {
+function CardHeader({ label }: { label: string }) {
   return (
-    <div className="flex items-stretch" style={{ borderBottom: "1px solid rgba(132,204,22,0.18)" }}>
-      {/* Number panel */}
-      <div
-        className="relative flex items-center justify-center flex-shrink-0 overflow-hidden"
-        style={{ width: 72, minHeight: 56, ...NUM_PANEL }}
-      >
-        <div className="absolute inset-0" style={NUM_SHEEN} />
-        <div
-          className="absolute right-0 inset-y-3"
-          style={{ width: 1, background: "linear-gradient(180deg, transparent, rgba(132,204,22,0.28), transparent)" }}
-        />
-        <span
-          className="relative select-none"
-          style={{
-            fontFamily: "var(--font-barlow)",
-            fontWeight: 900,
-            fontSize: "2.4rem",
-            color: "rgba(255,255,255,0.14)",
-            letterSpacing: "-0.03em",
-            lineHeight: 1,
-          }}
-        >{num}</span>
-      </div>
-      {/* Label */}
-      <div className="flex-1 px-5 py-3.5 flex items-center" style={HEADER_BG}>
-        <p className="frost-label" style={{ color: "rgba(132,204,22,0.78)" }}>{label}</p>
-      </div>
+    <div className="frost-card-header px-5 py-3.5">
+      <p className="frost-label" style={{ color: "rgba(132,204,22,0.78)" }}>{label}</p>
     </div>
   )
 }
@@ -171,7 +137,7 @@ export default function AthleteForm({ gymId }: { gymId: string }) {
         className="frost-card rounded-2xl overflow-hidden frost-enter flex-1 flex flex-col"
         style={{ borderTop: "1px solid rgba(132,204,22,0.22)" }}
       >
-        <CardHeader num="01" label="Log Training Session" />
+        <CardHeader label="Log Training Session" />
         <div className="relative px-6 py-5 flex-1 flex flex-col">
           <div className="absolute inset-0 pointer-events-none" style={CONTENT_GLOW} />
           <div className="relative flex-1 flex flex-col">
@@ -210,7 +176,7 @@ export default function AthleteForm({ gymId }: { gymId: string }) {
         className="frost-card rounded-2xl overflow-hidden frost-enter-2 flex-1 flex flex-col"
         style={{ borderTop: "1px solid rgba(132,204,22,0.22)" }}
       >
-        <CardHeader num="02" label="Daily Check-in" />
+        <CardHeader label="Daily Check-in" />
         <div className="relative px-6 py-5 flex-1 flex flex-col">
           <div className="absolute inset-0 pointer-events-none" style={CONTENT_GLOW} />
           <div className="relative flex-1 flex flex-col">

@@ -28,7 +28,7 @@ describe("buildActivityDays", () => {
     expect(result).toHaveLength(1)
     const [dateStr, entry] = result[0]
     expect(dateStr).toBe("2024-06-04")
-    expect(entry.session).toEqual({ duration: 60, intensity: 7, type: "sparring" })
+    expect(entry.sessions).toEqual([{ duration: 60, intensity: 7, type: "sparring" }])
     expect(entry.checkIn).toBeUndefined()
   })
 
@@ -38,7 +38,7 @@ describe("buildActivityDays", () => {
     const [dateStr, entry] = result[0]
     expect(dateStr).toBe("2024-06-04")
     expect(entry.checkIn).toEqual({ sleep: 8, soreness: 3, stress: 2, injury: false })
-    expect(entry.session).toBeUndefined()
+    expect(entry.sessions).toEqual([])
   })
 
   it("merges session and check-in from the same day into one entry", () => {
@@ -49,7 +49,7 @@ describe("buildActivityDays", () => {
     expect(result).toHaveLength(1)
     const [dateStr, entry] = result[0]
     expect(dateStr).toBe("2024-06-04")
-    expect(entry.session).toEqual({ duration: 60, intensity: 7, type: "sparring" })
+    expect(entry.sessions).toEqual([{ duration: 60, intensity: 7, type: "sparring" }])
     expect(entry.checkIn).toEqual({ sleep: 8, soreness: 3, stress: 2, injury: false })
   })
 
@@ -70,7 +70,7 @@ describe("buildActivityDays", () => {
     expect(result[1][0]).toBe("2024-06-03")
   })
 
-  it("last session wins when two sessions share the same date", () => {
+  it("preserves all sessions from the same day in order", () => {
     const result = buildActivityDays(
       [
         makeSession("2024-06-04", { duration: 90, intensity: 9, type: "sparring" }),
@@ -79,8 +79,9 @@ describe("buildActivityDays", () => {
       []
     )
     expect(result).toHaveLength(1)
-    // second entry processed wins (last-write-wins)
     const [, entry] = result[0]
-    expect(entry.session?.type).toBe("drilling")
+    expect(entry.sessions).toHaveLength(2)
+    expect(entry.sessions[0].type).toBe("sparring")
+    expect(entry.sessions[1].type).toBe("drilling")
   })
 })

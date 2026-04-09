@@ -1,5 +1,5 @@
 const BLOOM: React.CSSProperties = {
-  background: "radial-gradient(ellipse 70% 120% at 0% 50%, rgba(132,204,22,0.14) 0%, transparent 70%)",
+  background: "radial-gradient(ellipse 70% 120% at 50% 50%, rgba(132,204,22,0.12) 0%, transparent 70%)",
 }
 
 function TopoLines() {
@@ -62,11 +62,11 @@ export default function PageHeader({ label, title, meta }: Props) {
       <TopoLines />
       <div className="absolute inset-0 pointer-events-none" style={BLOOM} />
 
-      <div className="relative max-w-5xl mx-auto">
-        <p className="frost-label mb-3" style={{ color: "rgba(148,163,184,0.65)" }}>{label}</p>
+      <div className="relative max-w-5xl mx-auto text-center">
+        <p className="frost-label justify-center mb-3" style={{ color: "rgba(148,163,184,0.65)" }}>{label}</p>
 
-        <div className="h-px mb-5 w-32" style={{
-          background: "linear-gradient(90deg, #84cc16, #65a30d, transparent)"
+        <div className="h-px mb-5 w-37 mx-auto" style={{
+          background: "linear-gradient(90deg, transparent, #84cc16, #65a30d, transparent)"
         }} />
 
         <h1
@@ -88,7 +88,7 @@ export default function PageHeader({ label, title, meta }: Props) {
         </h1>
 
         {meta && (
-          <p className="mt-4 text-xs tracking-[0.14em] uppercase"
+          <p className="mt-4 text-xs tracking-[0.14em] uppercase text-center"
             style={{ color: "rgba(148,163,184,0.38)" }}>
             {meta}
           </p>

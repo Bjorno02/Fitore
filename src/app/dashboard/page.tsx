@@ -62,8 +62,7 @@ export default async function DashboardPage() {
           {/* Stat strip */}
           <div className="frost-card rounded-2xl overflow-hidden mb-10 frost-enter-2"
             style={{ borderTop: "1px solid rgba(132,204,22,0.22)" }}>
-            <div className="px-6 py-2.5"
-              style={{ borderBottom: "1px solid rgba(132,204,22,0.18)", background: "linear-gradient(180deg, rgba(132,204,22,0.06) 0%, transparent 100%)" }}>
+            <div className="frost-card-header px-6 py-2.5">
               <p className="frost-label" style={{ color: "rgba(132,204,22,0.78)" }}>Gym Overview</p>
             </div>
             <div className="flex">

@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
   const athletes = new Map<string, {
     name: string | null
     checkIn?: { sleep: number; soreness: number; stress: number; injury: boolean; readiness: number }
-    session?: { type: string; duration: number; intensity: number; load: number }
+    sessions: { type: string; duration: number; intensity: number; load: number }[]
   }>()
 
   for (const c of checkIns) {
@@ -61,19 +61,23 @@ export async function GET(req: NextRequest) {
         injury: c.injury,
         readiness: Math.round(calcReadiness(c.sleep, c.soreness, c.stress, c.injury)),
       },
+      sessions: athletes.get(c.userId)?.sessions ?? [],
     })
   }
 
   for (const s of sessions) {
-    const existing = athletes.get(s.userId) ?? { name: s.user.name ?? s.user.email }
+    const existing = athletes.get(s.userId) ?? { name: s.user.name ?? s.user.email, sessions: [] }
     athletes.set(s.userId, {
       ...existing,
-      session: {
-        type: s.type,
-        duration: s.duration,
-        intensity: s.intensity,
-        load: Math.round(calcLoad(s.duration, s.intensity, s.type)),
-      },
+      sessions: [
+        ...existing.sessions,
+        {
+          type: s.type,
+          duration: s.duration,
+          intensity: s.intensity,
+          load: Math.round(calcLoad(s.duration, s.intensity, s.type)),
+        },
+      ],
     })
   }
 

@@ -1,6 +1,7 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import prisma from "@/lib/prisma"
+import Link from "next/link"
 import HomeHero from "./HomeHero"
 import HomeCards from "./HomeCards"
 
@@ -33,13 +34,17 @@ export default async function Home() {
   const isCoach = membership.role === "COACH" || membership.role === "ADMIN"
 
   return (
-    <main className="flex-1 flex flex-col lg:flex-row frost-enter" style={{ minHeight: 0 }}>
-      <div style={{ flex: 2, display: "flex", flexDirection: "column" }}>
-        <HomeHero gymName={membership.gym.name} userName={session.user.name} />
-      </div>
-      <div className="hidden lg:block metallic-strip" />
-      <div style={{ flex: 3, display: "flex", flexDirection: "column" }}>
+    <main className="flex-1 flex flex-col frost-enter">
+      <HomeHero gymName={membership.gym.name} userName={session.user.name} />
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 gap-8">
         <HomeCards isCoach={isCoach} />
+        <Link
+          href="/how-it-works"
+          className="text-xs font-semibold tracking-widest uppercase transition-colors"
+          style={{ color: "rgba(132,204,22,0.55)" }}
+        >
+          How it works →
+        </Link>
       </div>
     </main>
   )
