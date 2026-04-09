@@ -132,7 +132,7 @@ export default function CalendarPanel({ gymId, initialMonthSummary, initialDate 
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-6 frost-enter-3">
 
       {/* Calendar */}
-      <div className="frost-card rounded-xl overflow-hidden">
+      <div className="frost-card rounded-2xl overflow-hidden" style={{ borderTop: "1px solid rgba(132,204,22,0.22)" }}>
         <div className="frost-card-header px-5 py-3.5 flex items-center justify-between">
           <button
             onClick={handlePrevMonth}
@@ -140,7 +140,7 @@ export default function CalendarPanel({ gymId, initialMonthSummary, initialDate 
             aria-label="Previous month"
             className="btn-frost-ghost px-3 py-1 text-xs"
           >←</button>
-          <p className="frost-label">{MONTH_NAMES[month]} {year}</p>
+          <p className="frost-label" style={{ color: "rgba(132,204,22,0.78)" }}>{MONTH_NAMES[month]} {year}</p>
           <button
             onClick={handleNextMonth}
             disabled={loadingMonth}
@@ -153,7 +153,7 @@ export default function CalendarPanel({ gymId, initialMonthSummary, initialDate 
           <div className="grid grid-cols-7 mb-2">
             {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map(d => (
               <div key={d} className="text-center text-xs"
-                style={{ color: "rgba(148,163,184,0.4)" }}>{d}</div>
+                style={{ color: "rgba(148,163,184,0.65)" }}>{d}</div>
             ))}
           </div>
           {/* Day cells */}
@@ -194,9 +194,9 @@ export default function CalendarPanel({ gymId, initialMonthSummary, initialDate 
       </div>
 
       {/* Day panel */}
-      <div className="frost-card rounded-xl overflow-hidden">
+      <div className="frost-card rounded-2xl overflow-hidden" style={{ borderTop: "1px solid rgba(132,204,22,0.22)" }}>
         <div className="frost-card-header px-5 py-3.5">
-          <p className="frost-label">{selectedDisplay ?? "Select a day"}</p>
+          <p className="frost-label" style={{ color: "rgba(132,204,22,0.78)" }}>{selectedDisplay ?? "Select a day"}</p>
         </div>
         <div className="px-5 py-4">
           {loadingDay ? (
@@ -230,7 +230,7 @@ export default function CalendarPanel({ gymId, initialMonthSummary, initialDate 
                     )}
                   </div>
                 </div>
-                <p className="text-xs" style={{ color: "rgba(148,163,184,0.6)" }}>
+                <p className="text-xs" style={{ color: "rgba(148,163,184,0.82)" }}>
                   {athlete.checkIn
                     ? `sleep ${athlete.checkIn.sleep} · soreness ${athlete.checkIn.soreness} · stress ${athlete.checkIn.stress}${athlete.checkIn.injury ? " · injury" : ""}`
                     : "no check-in"}

@@ -60,18 +60,23 @@ export default async function DashboardPage() {
         <div className="max-w-5xl mx-auto">
 
           {/* Stat strip */}
-          <div className="frost-card rounded-xl overflow-hidden mb-10 frost-enter-2">
+          <div className="frost-card rounded-2xl overflow-hidden mb-10 frost-enter-2"
+            style={{ borderTop: "1px solid rgba(132,204,22,0.22)" }}>
+            <div className="px-6 py-2.5"
+              style={{ borderBottom: "1px solid rgba(132,204,22,0.18)", background: "linear-gradient(180deg, rgba(132,204,22,0.06) 0%, transparent 100%)" }}>
+              <p className="frost-label" style={{ color: "rgba(132,204,22,0.78)" }}>Gym Overview</p>
+            </div>
             <div className="flex">
               <div className="frost-stat">
-                <span className="frost-stat-value">{sessionCount}</span>
+                <span className="frost-stat-value" style={{ color: "#84cc16" }}>{sessionCount}</span>
                 <span className="frost-stat-label">Sessions</span>
               </div>
               <div className="frost-stat">
-                <span className="frost-stat-value">{checkinCount}</span>
+                <span className="frost-stat-value" style={{ color: "#84cc16" }}>{checkinCount}</span>
                 <span className="frost-stat-label">Check-ins</span>
               </div>
               <div className="frost-stat">
-                <span className="frost-stat-value">{pendingRequests.length}</span>
+                <span className="frost-stat-value" style={{ color: "#84cc16" }}>{pendingRequests.length}</span>
                 <span className="frost-stat-label">Pending</span>
               </div>
             </div>

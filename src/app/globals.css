@@ -157,7 +157,7 @@ body > * { position: relative; z-index: 1; }
   );
   backdrop-filter: blur(36px) saturate(140%);
   -webkit-backdrop-filter: blur(36px) saturate(140%);
-  border: 1px solid rgba(148, 163, 184, 0.10);
+  border: 1px solid rgba(148, 163, 184, 0.22);
   box-shadow:
     0 8px 40px rgba(4, 10, 22, 0.50),
     0 2px 8px  rgba(4, 10, 22, 0.30),
@@ -204,10 +204,10 @@ body > * { position: relative; z-index: 1; }
 
 /* Card header — silver-edge accent */
 .frost-card-header {
-  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  border-bottom: 1px solid rgba(132, 204, 22, 0.18);
   background: linear-gradient(
     180deg,
-    rgba(226, 232, 240, 0.055) 0%,
+    rgba(132, 204, 22, 0.06) 0%,
     transparent 100%
   );
 }
@@ -485,7 +485,7 @@ body > * { position: relative; z-index: 1; }
 }
 
 /* ─── List row divider ─── */
-.frost-row { border-bottom: 1px solid rgba(148, 163, 184, 0.09); }
+.frost-row { border-bottom: 1px solid rgba(148, 163, 184, 0.18); }
 
 /* ─── Stat chip ─── */
 .frost-stat {
@@ -493,7 +493,7 @@ body > * { position: relative; z-index: 1; }
   flex-direction: column;
   gap: 5px;
   padding: 1.25rem 2rem;
-  border-right: 1px solid rgba(148, 163, 184, 0.09);
+  border-right: 1px solid rgba(148, 163, 184, 0.18);
 }
 .frost-stat:last-child { border-right: none; }
 .frost-stat-value {
@@ -510,7 +510,7 @@ body > * { position: relative; z-index: 1; }
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(148, 163, 184, 0.60);
+  color: rgba(148, 163, 184, 0.82);
   display: block;
 }
 
