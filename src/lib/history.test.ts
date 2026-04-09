@@ -47,9 +47,10 @@ describe("buildActivityDays", () => {
       [makeCheckIn("2024-06-04")]
     )
     expect(result).toHaveLength(1)
-    const [, entry] = result[0]
-    expect(entry.session).toBeDefined()
-    expect(entry.checkIn).toBeDefined()
+    const [dateStr, entry] = result[0]
+    expect(dateStr).toBe("2024-06-04")
+    expect(entry.session).toEqual({ duration: 60, intensity: 7, type: "sparring" })
+    expect(entry.checkIn).toEqual({ sleep: 8, soreness: 3, stress: 2, injury: false })
   })
 
   it("keeps session and check-in on different days as separate entries", () => {
@@ -67,5 +68,19 @@ describe("buildActivityDays", () => {
     )
     expect(result[0][0]).toBe("2024-06-05")
     expect(result[1][0]).toBe("2024-06-03")
+  })
+
+  it("last session wins when two sessions share the same date", () => {
+    const result = buildActivityDays(
+      [
+        makeSession("2024-06-04", { duration: 90, intensity: 9, type: "sparring" }),
+        makeSession("2024-06-04", { duration: 45, intensity: 6, type: "drilling" }),
+      ],
+      []
+    )
+    expect(result).toHaveLength(1)
+    // second entry processed wins (last-write-wins)
+    const [, entry] = result[0]
+    expect(entry.session?.type).toBe("drilling")
   })
 })
