@@ -1,4 +1,6 @@
 import { redirect } from "next/navigation"
+import Link from "next/link"
+import { LuSettings } from "react-icons/lu"
 import { auth } from "@/auth"
 import prisma from "@/lib/prisma"
 import PendingRequests from "./PendingRequests"
@@ -59,26 +61,52 @@ export default async function DashboardPage() {
       <div className="flex-1 px-6 py-10">
         <div className="max-w-5xl mx-auto">
 
-          {/* Stat strip */}
-          <div className="frost-card rounded-2xl overflow-hidden mb-10 frost-enter-2"
-            style={{ borderTop: "1px solid rgba(132,204,22,0.22)" }}>
-            <div className="frost-card-header px-6 py-2.5">
-              <p className="frost-label" style={{ color: "rgba(132,204,22,0.78)" }}>Gym Overview</p>
+          <div className="flex flex-col sm:flex-row gap-4 items-stretch mb-10 frost-enter-2">
+            <div
+              className="flex-1 frost-card rounded-2xl overflow-hidden"
+              style={{ borderTop: "1px solid rgba(132,204,22,0.22)" }}
+            >
+              <div className="frost-card-header px-6 py-2.5">
+                <p className="frost-label" style={{ color: "rgba(132,204,22,0.78)" }}>Gym Overview</p>
+              </div>
+              <div className="flex">
+                <div className="frost-stat">
+                  <span className="frost-stat-value" style={{ color: "#84cc16" }}>{sessionCount}</span>
+                  <span className="frost-stat-label">Sessions</span>
+                </div>
+                <div className="frost-stat">
+                  <span className="frost-stat-value" style={{ color: "#84cc16" }}>{checkinCount}</span>
+                  <span className="frost-stat-label">Check-ins</span>
+                </div>
+                <div className="frost-stat">
+                  <span className="frost-stat-value" style={{ color: "#84cc16" }}>{pendingRequests.length}</span>
+                  <span className="frost-stat-label">Pending</span>
+                </div>
+              </div>
             </div>
-            <div className="flex">
-              <div className="frost-stat">
-                <span className="frost-stat-value" style={{ color: "#84cc16" }}>{sessionCount}</span>
-                <span className="frost-stat-label">Sessions</span>
-              </div>
-              <div className="frost-stat">
-                <span className="frost-stat-value" style={{ color: "#84cc16" }}>{checkinCount}</span>
-                <span className="frost-stat-label">Check-ins</span>
-              </div>
-              <div className="frost-stat">
-                <span className="frost-stat-value" style={{ color: "#84cc16" }}>{pendingRequests.length}</span>
-                <span className="frost-stat-label">Pending</span>
-              </div>
-            </div>
+
+            <Link
+              href="/dashboard/settings"
+              className="frost-card rounded-2xl overflow-hidden flex flex-col items-center justify-center gap-3 px-8 py-4 min-w-40 no-underline"
+              style={{
+                borderTop: "1px solid rgba(132,204,22,0.22)",
+              }}
+            >
+              <LuSettings
+                size={28}
+                aria-hidden="true"
+                style={{
+                  color: "#84cc16",
+                  filter: "drop-shadow(0 0 6px rgba(132,204,22,0.5))",
+                }}
+              />
+              <span
+                className="text-xs font-bold tracking-widest uppercase text-center"
+                style={{ color: "rgba(132,204,22,0.78)" }}
+              >
+                Configure<br />Weights
+              </span>
+            </Link>
           </div>
 
           {/* Pending requests */}

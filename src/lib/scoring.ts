@@ -54,3 +54,43 @@ export function calcReadiness(
   return Math.max(0, Math.min(100, 100 - sleepScore - sorenessScore - stressScore - injuryScore))
 
 }
+
+export type GymSettingsRow = {
+  multiplierSparring: number
+  multiplierDrilling: number
+  multiplierConditioning: number
+  multiplierWeights: number
+  sleepWeight: number
+  sorenessWeight: number
+  stressWeight: number
+  injuryPenalty: number
+}
+
+export function gymSettingsToConfig(settings: GymSettingsRow | null): {
+  loadConfig: LoadConfig
+  readinessConfig: ReadinessConfig
+} {
+  if (!settings) {
+    return {
+      loadConfig: { ...DEFAULT_LOAD_CONFIG, typeMultipliers: { ...DEFAULT_LOAD_CONFIG.typeMultipliers } },
+      readinessConfig: { ...DEFAULT_READINESS_CONFIG },
+    }
+  }
+  return {
+    loadConfig: {
+      typeMultipliers: {
+        sparring: settings.multiplierSparring,
+        drilling: settings.multiplierDrilling,
+        conditioning: settings.multiplierConditioning,
+        weights: settings.multiplierWeights,
+      },
+      defaultMultiplier: DEFAULT_LOAD_CONFIG.defaultMultiplier,
+    },
+    readinessConfig: {
+      sleepWeight: settings.sleepWeight,
+      sorenessWeight: settings.sorenessWeight,
+      stressWeight: settings.stressWeight,
+      injuryPenalty: settings.injuryPenalty,
+    },
+  }
+}

@@ -22,6 +22,7 @@ export default async function Navbar() {
         <div className="flex items-stretch gap-0.5">
           <Link href="/athlete" className="nav-link">Log Training</Link>
           {isCoach && <Link href="/dashboard" className="nav-link">Dashboard</Link>}
+          {isCoach && <Link href="/dashboard/settings" className="nav-link">Settings</Link>}
           <Link href="/athlete/history" className="nav-link">Training History</Link>
           <Link href="/how-it-works" className="nav-link">How It Works</Link>
         </div>

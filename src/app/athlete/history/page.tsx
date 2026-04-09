@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import prisma from "@/lib/prisma"
 import PageHeader from "@/components/PageHeader"
-import { calcLoad, calcReadiness } from "@/lib/scoring"
+import { calcLoad, calcReadiness, gymSettingsToConfig } from "@/lib/scoring"
 import { buildActivityDays } from "@/lib/history"
 
 const SESSION_TYPES = ["sparring", "drilling", "conditioning", "weights"] as const
@@ -23,7 +23,7 @@ export default async function AthleteHistoryPage() {
   const userId = session.user.id
   const gymId = membership.gymId
 
-  const [sessions, checkIns] = await Promise.all([
+  const [sessions, checkIns, gymSettingsRow] = await Promise.all([
     prisma.trainingSession.findMany({
       where: { userId, gymId },
       orderBy: { createdAt: "desc" },
@@ -34,7 +34,10 @@ export default async function AthleteHistoryPage() {
       orderBy: { createdAt: "desc" },
       select: { sleep: true, soreness: true, stress: true, injury: true, createdAt: true },
     }),
+    prisma.gymSettings.findUnique({ where: { gymId } }),
   ])
+
+  const { loadConfig, readinessConfig } = gymSettingsToConfig(gymSettingsRow)
 
   // Lifetime stats
   const totalSessions = sessions.length
@@ -44,7 +47,7 @@ export default async function AthleteHistoryPage() {
     : 0
   const avgReadiness = checkIns.length
     ? Math.round(
-        checkIns.reduce((acc, c) => acc + calcReadiness(c.sleep, c.soreness, c.stress, c.injury), 0)
+        checkIns.reduce((acc, c) => acc + calcReadiness(c.sleep, c.soreness, c.stress, c.injury, readinessConfig), 0)
         / checkIns.length
       )
     : 0
@@ -66,7 +69,7 @@ export default async function AthleteHistoryPage() {
     .filter(([dateStr, entry]) => new Date(dateStr + "T12:00:00Z") >= thirtyDaysAgo && entry.sessions.length > 0)
     .map(([dateStr, entry]) => ({
       date: dateStr,
-      load: entry.sessions.reduce((sum, s) => sum + calcLoad(s.duration, s.intensity, s.type), 0),
+      load: entry.sessions.reduce((sum, s) => sum + calcLoad(s.duration, s.intensity, s.type, loadConfig), 0),
     }))
     .reverse()
   const maxLoad = Math.max(...loadByDay.map(d => d.load), 1)

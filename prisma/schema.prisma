@@ -65,7 +65,8 @@ model Gym {
 
   memberships Membership[]
   trainingSessions TrainingSession[]
-  checkIns         CheckIn[]   
+  checkIns         CheckIn[]
+  settings         GymSettings?
 }
 
 model Membership {
@@ -122,4 +123,22 @@ enum Role {
 enum MembershipStatus {
   PENDING
   ACTIVE
+}
+
+model GymSettings {
+  id      String @id @default(cuid())
+  gymId   String @unique
+  gym     Gym    @relation(fields: [gymId], references: [id], onDelete: Cascade)
+
+  multiplierSparring     Float @default(1.5)
+  multiplierDrilling     Float @default(1.0)
+  multiplierConditioning Float @default(1.2)
+  multiplierWeights      Float @default(0.8)
+
+  sleepWeight    Float @default(1.0)
+  sorenessWeight Float @default(0.3)
+  stressWeight   Float @default(0.2)
+  injuryPenalty  Float @default(30.0)
+
+  updatedAt DateTime @updatedAt
 }

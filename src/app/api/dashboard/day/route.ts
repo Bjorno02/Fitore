@@ -5,7 +5,7 @@ import { auth } from "@/auth"
 import { Role } from "@/generated/prisma/enums"
 import { requireGymMember } from "@/lib/auth-guards"
 import prisma from "@/lib/prisma"
-import { calcLoad, calcReadiness } from "@/lib/scoring"
+import { calcLoad, calcReadiness, gymSettingsToConfig } from "@/lib/scoring"
 
 const daySchema = z.object({
   gymId: z.string().min(1),
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
   const end = new Date(start)
   end.setUTCDate(end.getUTCDate() + 1)
 
-  const [checkIns, sessions] = await Promise.all([
+  const [checkIns, sessions, gymSettingsRow] = await Promise.all([
     prisma.checkIn.findMany({
       where: { gymId, createdAt: { gte: start, lt: end } },
       include: { user: { select: { id: true, name: true, email: true } } },
@@ -43,7 +43,10 @@ export async function GET(req: NextRequest) {
       where: { gymId, createdAt: { gte: start, lt: end } },
       include: { user: { select: { id: true, name: true, email: true } } },
     }),
+    prisma.gymSettings.findUnique({ where: { gymId } }),
   ])
+
+  const { loadConfig, readinessConfig } = gymSettingsToConfig(gymSettingsRow)
 
   const athletes = new Map<string, {
     name: string | null
@@ -59,7 +62,7 @@ export async function GET(req: NextRequest) {
         soreness: c.soreness,
         stress: c.stress,
         injury: c.injury,
-        readiness: Math.round(calcReadiness(c.sleep, c.soreness, c.stress, c.injury)),
+        readiness: Math.round(calcReadiness(c.sleep, c.soreness, c.stress, c.injury, readinessConfig)),
       },
       sessions: athletes.get(c.userId)?.sessions ?? [],
     })
@@ -75,7 +78,7 @@ export async function GET(req: NextRequest) {
           type: s.type,
           duration: s.duration,
           intensity: s.intensity,
-          load: Math.round(calcLoad(s.duration, s.intensity, s.type)),
+          load: Math.round(calcLoad(s.duration, s.intensity, s.type, loadConfig)),
         },
       ],
     })
