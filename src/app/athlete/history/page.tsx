@@ -17,7 +17,21 @@ export default async function AthleteHistoryPage() {
     include: { gym: true },
   })
   if (!membership) {
-    return <p className="text-text-muted p-6">You are not a member of any gym.</p>
+    return (
+      <main className="mx-auto max-w-6xl px-6 py-24 md:px-12">
+        <p
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "14px",
+            textTransform: "uppercase",
+            letterSpacing: "var(--tracking-label)",
+            color: "var(--color-ink-muted)",
+          }}
+        >
+          — You are not a member of any gym —
+        </p>
+      </main>
+    )
   }
 
   const userId = session.user.id
@@ -32,14 +46,19 @@ export default async function AthleteHistoryPage() {
     prisma.checkIn.findMany({
       where: { userId, gymId },
       orderBy: { createdAt: "desc" },
-      select: { sleep: true, soreness: true, stress: true, injury: true, createdAt: true },
+      select: {
+        sleep: true,
+        soreness: true,
+        stress: true,
+        injury: true,
+        createdAt: true,
+      },
     }),
     prisma.gymSettings.findUnique({ where: { gymId } }),
   ])
 
   const { loadConfig, readinessConfig } = gymSettingsToConfig(gymSettingsRow)
 
-  // Lifetime stats
   const totalSessions = sessions.length
   const totalMinutes = sessions.reduce((acc, s) => acc + s.duration, 0)
   const avgSleep = checkIns.length
@@ -47,218 +66,442 @@ export default async function AthleteHistoryPage() {
     : 0
   const avgReadiness = checkIns.length
     ? Math.round(
-        checkIns.reduce((acc, c) => acc + calcReadiness(c.sleep, c.soreness, c.stress, c.injury, readinessConfig), 0)
-        / checkIns.length
+        checkIns.reduce(
+          (acc, c) =>
+            acc +
+            calcReadiness(c.sleep, c.soreness, c.stress, c.injury, readinessConfig),
+          0,
+        ) / checkIns.length,
       )
     : 0
 
-  // Day map (newest-first)
   const days = buildActivityDays(sessions, checkIns)
 
-  // Session type breakdown
   const typeCounts: Record<string, number> = {}
   for (const s of sessions) {
     typeCounts[s.type] = (typeCounts[s.type] ?? 0) + 1
   }
-  const maxTypeCount = Math.max(...SESSION_TYPES.map(t => typeCounts[t] ?? 0), 1)
+  const maxTypeCount = Math.max(...SESSION_TYPES.map((t) => typeCounts[t] ?? 0), 1)
 
-  // Load last 30 days (oldest → newest for left-to-right chart)
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
   const loadByDay = days
-    .filter(([dateStr, entry]) => new Date(dateStr + "T12:00:00Z") >= thirtyDaysAgo && entry.sessions.length > 0)
+    .filter(
+      ([dateStr, entry]) =>
+        new Date(dateStr + "T12:00:00Z") >= thirtyDaysAgo && entry.sessions.length > 0,
+    )
     .map(([dateStr, entry]) => ({
       date: dateStr,
-      load: entry.sessions.reduce((sum, s) => sum + calcLoad(s.duration, s.intensity, s.type, loadConfig), 0),
+      load: entry.sessions.reduce(
+        (sum, s) => sum + calcLoad(s.duration, s.intensity, s.type, loadConfig),
+        0,
+      ),
     }))
     .reverse()
-  const maxLoad = Math.max(...loadByDay.map(d => d.load), 1)
+  const maxLoad = Math.max(...loadByDay.map((d) => d.load), 1)
 
   return (
-    <main className="flex-1 flex flex-col">
+    <main>
       <PageHeader
         label={membership.gym.name}
         title="History"
         meta={session.user.name ?? undefined}
       />
-      <div className="flex-1 px-6 py-10">
-        <div className="max-w-5xl mx-auto">
-
-          {/* Back link */}
-          <div className="mb-8 frost-enter">
-            <Link
-              href="/athlete"
-              className="text-xs font-semibold tracking-widest uppercase"
-              style={{ color: "rgba(132,204,22,0.78)" }}
-            >
-              ← Log Training
-            </Link>
-          </div>
-
-          {/* Stat strip */}
-          <div
-            className="frost-card rounded-2xl overflow-hidden mb-8 frost-enter-2"
-            style={{ borderTop: "1px solid rgba(132,204,22,0.22)" }}
+      <div className="mx-auto max-w-6xl px-6 pb-24 md:px-12">
+        {/* Back link */}
+        <div className="mb-12">
+          <Link
+            href="/athlete"
+            className="group inline-flex items-center gap-3 transition-opacity hover:opacity-100"
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "var(--text-eyebrow)",
+              letterSpacing: "var(--tracking-eyebrow)",
+              textTransform: "uppercase",
+              color: "var(--color-ink)",
+              opacity: 0.7,
+            }}
           >
-            <div className="frost-card-header px-6 py-2.5">
-              <p className="frost-label" style={{ color: "rgba(132,204,22,0.78)" }}>Lifetime Stats</p>
-            </div>
-            <div className="flex">
-              <div className="frost-stat">
-                <span className="frost-stat-value" style={{ color: "#84cc16" }}>{totalSessions}</span>
-                <span className="frost-stat-label">Sessions</span>
-              </div>
-              <div className="frost-stat">
-                <span className="frost-stat-value" style={{ color: "#84cc16" }}>{totalMinutes}</span>
-                <span className="frost-stat-label">Minutes</span>
-              </div>
-              <div className="frost-stat">
-                <span className="frost-stat-value" style={{ color: "#84cc16" }}>{avgSleep}</span>
-                <span className="frost-stat-label">Avg Sleep</span>
-              </div>
-              <div className="frost-stat">
-                <span className="frost-stat-value" style={{ color: "#84cc16" }}>{avgReadiness}</span>
-                <span className="frost-stat-label">Avg Readiness</span>
-              </div>
-            </div>
+            <span
+              style={{ color: "var(--color-accent)" }}
+              className="transition-transform group-hover:-translate-x-1"
+            >
+              ←
+            </span>
+            <span>Log Training</span>
+          </Link>
+        </div>
+
+        {/* § 01 Lifetime stats */}
+        <section
+          className="mb-16 border-t pt-6"
+          style={{ borderColor: "var(--color-rule-strong)" }}
+        >
+          <div
+            className="mb-8"
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "var(--text-eyebrow)",
+              letterSpacing: "var(--tracking-eyebrow)",
+              textTransform: "uppercase",
+              color: "var(--color-ink-muted)",
+            }}
+          >
+            <span style={{ color: "var(--color-accent)" }}>§ 01</span> Lifetime Stats
           </div>
 
-          {/* Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 frost-enter-2">
+          <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+            {[
+              { value: totalSessions, label: "Sessions" },
+              { value: totalMinutes, label: "Minutes" },
+              { value: avgSleep, label: "Avg Sleep" },
+              { value: avgReadiness, label: "Avg Readiness" },
+            ].map((stat) => (
+              <div key={stat.label} className="flex flex-col">
+                <span
+                  style={{
+                    fontFamily: "var(--font-barlow)",
+                    fontWeight: 800,
+                    fontSize: "var(--text-display-md)",
+                    lineHeight: 1,
+                    letterSpacing: "var(--tracking-display)",
+                    color: "var(--color-ink)",
+                  }}
+                >
+                  {stat.value}
+                </span>
+                <span
+                  className="mt-3"
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "var(--text-eyebrow)",
+                    letterSpacing: "var(--tracking-label)",
+                    textTransform: "uppercase",
+                    color: "var(--color-ink-muted)",
+                  }}
+                >
+                  {stat.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
 
-            {/* Session type breakdown */}
+        {/* § 02 Charts */}
+        <section
+          className="mb-16 grid grid-cols-1 gap-12 border-t pt-6 lg:grid-cols-2 lg:gap-16"
+          style={{ borderColor: "var(--color-rule-strong)" }}
+        >
+          {/* Session breakdown */}
+          <div>
             <div
-              className="frost-card rounded-2xl overflow-hidden"
-              style={{ borderTop: "1px solid rgba(132,204,22,0.22)" }}
+              className="mb-6 flex items-baseline justify-between border-b pb-3"
+              style={{ borderColor: "var(--color-rule)" }}
             >
-              <div className="frost-card-header px-5 py-3">
-                <p className="frost-label" style={{ color: "rgba(132,204,22,0.78)" }}>Session Breakdown</p>
+              <div
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "var(--text-eyebrow)",
+                  letterSpacing: "var(--tracking-eyebrow)",
+                  textTransform: "uppercase",
+                  color: "var(--color-ink-muted)",
+                }}
+              >
+                <span style={{ color: "var(--color-accent)" }}>§ 02a</span> Session Breakdown
               </div>
-              <div className="px-5 py-4">
-                {totalSessions === 0 ? (
-                  <p className="text-sm text-center py-8" style={{ color: "rgba(148,163,184,0.6)" }}>
-                    No sessions logged yet.
-                  </p>
-                ) : (
-                  <div className="flex items-end gap-3 h-24">
-                    {SESSION_TYPES.map(type => {
-                      const count = typeCounts[type] ?? 0
-                      const heightPct = Math.round((count / maxTypeCount) * 100)
-                      return (
-                        <div key={type} className="flex-1 flex flex-col items-center gap-1.5">
-                          <span className="text-xs font-semibold" style={{ color: "#84cc16" }}>{count}</span>
-                          <div
-                            className="w-full rounded-t-sm transition-all"
-                            style={{
-                              height: `${heightPct}%`,
-                              minHeight: count > 0 ? 4 : 0,
-                              background: "linear-gradient(180deg, rgba(132,204,22,0.7) 0%, rgba(101,163,13,0.5) 100%)",
-                            }}
-                          />
-                          <span className="text-xs capitalize" style={{ color: "rgba(148,163,184,0.65)" }}>
-                            {type.slice(0, 4)}
-                          </span>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
+              <span
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "11px",
+                  letterSpacing: "0.2em",
+                  textTransform: "uppercase",
+                  color: "var(--color-ink-faint)",
+                }}
+              >
+                By Type
+              </span>
             </div>
-
-            {/* Load last 30 days */}
-            <div
-              className="frost-card rounded-2xl overflow-hidden"
-              style={{ borderTop: "1px solid rgba(132,204,22,0.22)" }}
-            >
-              <div className="frost-card-header px-5 py-3">
-                <p className="frost-label" style={{ color: "rgba(132,204,22,0.78)" }}>Load — Last 30 Days</p>
-              </div>
-              <div className="px-5 py-4">
-                {loadByDay.length === 0 ? (
-                  <p className="text-sm text-center py-8" style={{ color: "rgba(148,163,184,0.6)" }}>
-                    No sessions in the last 30 days.
-                  </p>
-                ) : (
-                  <div className="flex items-end gap-1 h-24">
-                    {loadByDay.map(({ date, load }) => (
-                      <div
-                        key={date}
-                        className="flex-1 rounded-t-sm"
-                        title={`${date}: load ${Math.round(load)}`}
+            {totalSessions === 0 ? (
+              <p
+                className="py-12 text-center"
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "12px",
+                  letterSpacing: "var(--tracking-label)",
+                  textTransform: "uppercase",
+                  color: "var(--color-ink-muted)",
+                }}
+              >
+                — No sessions yet —
+              </p>
+            ) : (
+              <div
+                className="flex items-end gap-4 border-b pb-2"
+                style={{ height: 140, borderColor: "var(--color-rule-strong)" }}
+              >
+                {SESSION_TYPES.map((type) => {
+                  const count = typeCounts[type] ?? 0
+                  const heightPct = Math.round((count / maxTypeCount) * 100)
+                  return (
+                    <div
+                      key={type}
+                      className="flex flex-1 flex-col items-center justify-end gap-2"
+                    >
+                      <span
                         style={{
-                          height: `${Math.round((load / maxLoad) * 100)}%`,
-                          minHeight: 4,
-                          background: "linear-gradient(180deg, rgba(132,204,22,0.7) 0%, rgba(101,163,13,0.5) 100%)",
+                          fontFamily: "var(--font-barlow)",
+                          fontWeight: 800,
+                          fontSize: "22px",
+                          color: "var(--color-ink)",
+                          lineHeight: 1,
+                        }}
+                      >
+                        {count}
+                      </span>
+                      <div
+                        className="w-full"
+                        style={{
+                          height: `${heightPct}%`,
+                          minHeight: count > 0 ? 6 : 0,
+                          backgroundColor: "var(--color-accent)",
                         }}
                       />
-                    ))}
-                  </div>
-                )}
+                      <span
+                        className="mt-1"
+                        style={{
+                          fontFamily: "var(--font-mono)",
+                          fontSize: "10px",
+                          letterSpacing: "0.2em",
+                          textTransform: "uppercase",
+                          color: "var(--color-ink-muted)",
+                        }}
+                      >
+                        {type.slice(0, 4)}
+                      </span>
+                    </div>
+                  )
+                })}
               </div>
-            </div>
-
+            )}
           </div>
 
-          {/* Activity list */}
-          <div
-            className="frost-card rounded-2xl overflow-hidden frost-enter-3"
-            style={{ borderTop: "1px solid rgba(132,204,22,0.22)" }}
-          >
-            <div className="frost-card-header px-5 py-3">
-              <p className="frost-label" style={{ color: "rgba(132,204,22,0.78)" }}>Activity Log</p>
+          {/* Load last 30 days */}
+          <div>
+            <div
+              className="mb-6 flex items-baseline justify-between border-b pb-3"
+              style={{ borderColor: "var(--color-rule)" }}
+            >
+              <div
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "var(--text-eyebrow)",
+                  letterSpacing: "var(--tracking-eyebrow)",
+                  textTransform: "uppercase",
+                  color: "var(--color-ink-muted)",
+                }}
+              >
+                <span style={{ color: "var(--color-accent)" }}>§ 02b</span> Load · Last 30 Days
+              </div>
+              <span
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "11px",
+                  letterSpacing: "0.2em",
+                  textTransform: "uppercase",
+                  color: "var(--color-ink-faint)",
+                }}
+              >
+                Daily
+              </span>
             </div>
-            <div style={{ maxHeight: 600, overflowY: "auto" }}>
-              {days.length === 0 ? (
-                <p className="text-sm text-center py-8" style={{ color: "rgba(148,163,184,0.6)" }}>
-                  No activity logged yet.
-                </p>
-              ) : (
-                days.flatMap(([dateStr, entry]) => {
-                  const display = new Date(dateStr + "T12:00:00Z").toLocaleDateString("en-US", {
-                    month: "short", day: "numeric", year: "numeric",
-                  })
-                  const checkInDetail = entry.checkIn
-                    ? `sleep ${entry.checkIn.sleep} · sore ${entry.checkIn.soreness}${entry.checkIn.injury ? " · injury" : ""}`
-                    : null
+            {loadByDay.length === 0 ? (
+              <p
+                className="py-12 text-center"
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "12px",
+                  letterSpacing: "var(--tracking-label)",
+                  textTransform: "uppercase",
+                  color: "var(--color-ink-muted)",
+                }}
+              >
+                — No sessions in last 30 days —
+              </p>
+            ) : (
+              <div
+                className="flex items-end gap-1 border-b pb-2"
+                style={{ height: 140, borderColor: "var(--color-rule-strong)" }}
+              >
+                {loadByDay.map(({ date, load }) => (
+                  <div
+                    key={date}
+                    className="flex-1"
+                    title={`${date}: load ${Math.round(load)}`}
+                    style={{
+                      height: `${Math.round((load / maxLoad) * 100)}%`,
+                      minHeight: 4,
+                      backgroundColor: "var(--color-ink)",
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
 
-                  if (entry.sessions.length === 0) {
-                    return [(
-                      <div key={dateStr} className="px-5 py-3.5 frost-row">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-semibold text-sm text-text-primary">{display}</span>
-                        </div>
-                        <p className="text-xs" style={{ color: "rgba(148,163,184,0.82)" }}>
-                          check-in only · {checkInDetail}
-                        </p>
-                      </div>
-                    )]
-                  }
+        {/* § 03 Activity log */}
+        <section
+          className="border-t pt-6"
+          style={{ borderColor: "var(--color-rule-strong)" }}
+        >
+          <div
+            className="mb-8 flex items-baseline justify-between border-b pb-3"
+            style={{ borderColor: "var(--color-rule)" }}
+          >
+            <div
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "var(--text-eyebrow)",
+                letterSpacing: "var(--tracking-eyebrow)",
+                textTransform: "uppercase",
+                color: "var(--color-ink-muted)",
+              }}
+            >
+              <span style={{ color: "var(--color-accent)" }}>§ 03</span> Activity Log
+            </div>
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "11px",
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                color: "var(--color-ink-faint)",
+              }}
+            >
+              Newest First
+            </span>
+          </div>
 
-                  return entry.sessions.map((session, i) => (
-                    <div key={`${dateStr}-${i}`} className="px-5 py-3.5 frost-row">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-semibold text-sm text-text-primary">{display}</span>
+          {days.length === 0 ? (
+            <p
+              className="py-12 text-center"
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "12px",
+                letterSpacing: "var(--tracking-label)",
+                textTransform: "uppercase",
+                color: "var(--color-ink-muted)",
+              }}
+            >
+              — No activity logged yet —
+            </p>
+          ) : (
+            <div>
+              {days.flatMap(([dateStr, entry]) => {
+                const display = new Date(dateStr + "T12:00:00Z").toLocaleDateString(
+                  "en-US",
+                  { month: "short", day: "numeric", year: "numeric" },
+                )
+                const checkInDetail = entry.checkIn
+                  ? `Sleep ${entry.checkIn.sleep} · Sore ${entry.checkIn.soreness}${entry.checkIn.injury ? " · Injury" : ""}`
+                  : null
+
+                if (entry.sessions.length === 0) {
+                  return [
+                    <div
+                      key={dateStr}
+                      className="border-b py-4"
+                      style={{ borderColor: "var(--color-rule)" }}
+                    >
+                      <div className="mb-1 flex items-baseline justify-between gap-4">
                         <span
-                          className="text-xs px-2.5 py-0.5 rounded-lg capitalize"
-                          style={{ background: "rgba(34,197,94,0.12)", color: "#86efac" }}
+                          style={{
+                            fontFamily: "var(--font-sans)",
+                            fontWeight: 600,
+                            fontSize: "16px",
+                            color: "var(--color-ink)",
+                          }}
                         >
-                          {session.type}
+                          {display}
+                        </span>
+                        <span
+                          style={{
+                            fontFamily: "var(--font-mono)",
+                            fontSize: "10px",
+                            letterSpacing: "0.2em",
+                            textTransform: "uppercase",
+                            color: "var(--color-ink-faint)",
+                          }}
+                        >
+                          Check-in only
                         </span>
                       </div>
-                      <p className="text-xs" style={{ color: "rgba(148,163,184,0.82)" }}>
-                        {session.duration}min ×{session.intensity}
-                        {i === 0 && checkInDetail ? ` · ${checkInDetail}` : ""}
-                        {i === 0 && !checkInDetail ? " · no check-in" : ""}
+                      <p
+                        style={{
+                          fontFamily: "var(--font-mono)",
+                          fontSize: "11px",
+                          letterSpacing: "0.1em",
+                          textTransform: "uppercase",
+                          color: "var(--color-ink-muted)",
+                        }}
+                      >
+                        {checkInDetail}
                       </p>
-                    </div>
-                  ))
-                })
-              )}
-            </div>
-          </div>
+                    </div>,
+                  ]
+                }
 
-        </div>
+                return entry.sessions.map((sess, i) => (
+                  <div
+                    key={`${dateStr}-${i}`}
+                    className="border-b py-4"
+                    style={{ borderColor: "var(--color-rule)" }}
+                  >
+                    <div className="mb-1 flex items-baseline justify-between gap-4">
+                      <span
+                        style={{
+                          fontFamily: "var(--font-sans)",
+                          fontWeight: 600,
+                          fontSize: "16px",
+                          color: "var(--color-ink)",
+                        }}
+                      >
+                        {display}
+                      </span>
+                      <span
+                        className="flex items-baseline gap-1.5 border px-2.5 py-1"
+                        style={{
+                          fontFamily: "var(--font-mono)",
+                          fontSize: "10px",
+                          letterSpacing: "0.2em",
+                          textTransform: "uppercase",
+                          color: "var(--color-accent)",
+                          borderColor: "var(--color-accent)",
+                          backgroundColor: "var(--color-accent-soft)",
+                        }}
+                      >
+                        {sess.type}
+                      </span>
+                    </div>
+                    <p
+                      style={{
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "11px",
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                        color: "var(--color-ink-muted)",
+                      }}
+                    >
+                      {sess.duration}min · ×{sess.intensity}
+                      {i === 0 && checkInDetail ? ` · ${checkInDetail}` : ""}
+                      {i === 0 && !checkInDetail ? " · No check-in" : ""}
+                    </p>
+                  </div>
+                ))
+              })}
+            </div>
+          )}
+        </section>
       </div>
     </main>
   )

@@ -1,5 +1,6 @@
 "use client"
 
+import { motion, AnimatePresence } from "motion/react"
 import { useState } from "react"
 import { DEFAULT_LOAD_CONFIG, DEFAULT_READINESS_CONFIG } from "@/lib/scoring"
 
@@ -38,10 +39,18 @@ function SettingRow({
 }) {
   return (
     <div
-      className="flex items-center justify-between py-3"
-      style={{ borderBottom: "1px solid rgba(132,204,22,0.08)" }}
+      className="flex items-baseline justify-between border-b py-4"
+      style={{ borderColor: "var(--color-rule)" }}
     >
-      <span className="text-sm" style={{ color: "rgba(148,163,184,0.85)" }}>
+      <span
+        style={{
+          fontFamily: "var(--font-mono)",
+          fontSize: "12px",
+          letterSpacing: "0.15em",
+          textTransform: "uppercase",
+          color: "var(--color-ink-muted)",
+        }}
+      >
         {label}
       </span>
       <input
@@ -50,18 +59,39 @@ function SettingRow({
         min="0"
         max={max}
         value={value}
-        onChange={e => {
+        onChange={(e) => {
           const v = parseFloat(e.target.value)
           if (isFinite(v)) onChange(v)
         }}
-        className="rounded-lg px-3 py-1.5 text-sm text-center w-24"
+        className="w-24 border-b bg-transparent py-1 text-right text-lg outline-none transition-colors focus:border-[var(--color-accent)]"
         style={{
-          background: "rgba(132,204,22,0.06)",
-          border: "1px solid rgba(132,204,22,0.2)",
-          color: "#84cc16",
-          outline: "none",
+          borderColor: "var(--color-rule-strong)",
+          color: "var(--color-ink)",
+          fontFamily: "var(--font-barlow)",
+          fontWeight: 700,
         }}
       />
+    </div>
+  )
+}
+
+function SectionHead({ num, label }: { num: string; label: string }) {
+  return (
+    <div
+      className="mb-4 border-b pb-3"
+      style={{ borderColor: "var(--color-rule-strong)" }}
+    >
+      <div
+        style={{
+          fontFamily: "var(--font-mono)",
+          fontSize: "var(--text-eyebrow)",
+          letterSpacing: "var(--tracking-eyebrow)",
+          textTransform: "uppercase",
+          color: "var(--color-ink-muted)",
+        }}
+      >
+        <span style={{ color: "var(--color-accent)" }}>§ {num}</span> {label}
+      </div>
     </div>
   )
 }
@@ -80,7 +110,7 @@ export default function SettingsForm({
   const [saving, setSaving] = useState(false)
 
   function set(key: keyof Settings, value: number) {
-    setValues(v => ({ ...v, [key]: value }))
+    setValues((v) => ({ ...v, [key]: value }))
     setSaved(false)
     setError(false)
     setDirty(true)
@@ -110,73 +140,167 @@ export default function SettingsForm({
   }
 
   return (
-    <div className="flex flex-col gap-6 frost-enter-2">
-      <div
-        className="frost-card rounded-2xl overflow-hidden"
-        style={{ borderTop: "1px solid rgba(132,204,22,0.22)" }}
+    <div className="flex flex-col gap-14">
+      <motion.section
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.05 }}
       >
-        <div className="frost-card-header px-5 py-3">
-          <p className="frost-label" style={{ color: "rgba(132,204,22,0.78)" }}>
-            Load Multipliers
-          </p>
-        </div>
-        <div className="px-5 py-2">
-          <SettingRow label="Sparring" value={values.multiplierSparring} max={10} onChange={v => set("multiplierSparring", v)} />
-          <SettingRow label="Drilling" value={values.multiplierDrilling} max={10} onChange={v => set("multiplierDrilling", v)} />
-          <SettingRow label="Conditioning" value={values.multiplierConditioning} max={10} onChange={v => set("multiplierConditioning", v)} />
-          <SettingRow label="Weights" value={values.multiplierWeights} max={10} onChange={v => set("multiplierWeights", v)} />
-        </div>
-      </div>
-
-      <div
-        className="frost-card rounded-2xl overflow-hidden"
-        style={{ borderTop: "1px solid rgba(132,204,22,0.22)" }}
-      >
-        <div className="frost-card-header px-5 py-3">
-          <p className="frost-label" style={{ color: "rgba(132,204,22,0.78)" }}>
-            Readiness Weights
-          </p>
-        </div>
-        <div className="px-5 py-2">
-          <SettingRow label="Sleep Weight" value={values.sleepWeight} max={5} onChange={v => set("sleepWeight", v)} />
-          <SettingRow label="Soreness Weight" value={values.sorenessWeight} max={5} onChange={v => set("sorenessWeight", v)} />
-          <SettingRow label="Stress Weight" value={values.stressWeight} max={5} onChange={v => set("stressWeight", v)} />
-          <SettingRow label="Injury Penalty" value={values.injuryPenalty} max={100} onChange={v => set("injuryPenalty", v)} />
-        </div>
-      </div>
-
-      <div className="flex flex-col items-start gap-3">
-        {saved && (
-          <p className="text-xs font-semibold" style={{ color: "rgba(132,204,22,0.78)" }}>
-            Saved.
-          </p>
-        )}
-        {error && (
-          <p className="text-xs font-semibold" style={{ color: "#dc2626" }}>
-            Failed to save. Try again.
-          </p>
-        )}
-        <button
-          onClick={save}
-          disabled={!dirty || saving}
-          className="px-6 py-2 rounded-lg text-xs font-bold tracking-widest uppercase"
+        <SectionHead num="01" label="Load Multipliers" />
+        <p
+          className="mb-6"
           style={{
-            background: dirty && !saving ? "rgba(132,204,22,0.15)" : "rgba(132,204,22,0.05)",
-            border: "1px solid rgba(132,204,22,0.35)",
-            color: dirty && !saving ? "#84cc16" : "rgba(132,204,22,0.35)",
-            cursor: dirty && !saving ? "pointer" : "default",
+            fontFamily: "var(--font-sans)",
+            fontSize: "15px",
+            lineHeight: 1.7,
+            color: "var(--color-ink-soft)",
           }}
         >
-          {saving ? "Saving…" : "Save"}
-        </button>
-        <button
-          onClick={resetToDefaults}
-          className="text-xs font-semibold"
-          style={{ color: "rgba(132,204,22,0.45)", background: "none", border: "none", cursor: "pointer" }}
+          How hard is each session type? A sparring round is not a drilling round.
+        </p>
+        <div>
+          <SettingRow
+            label="Sparring"
+            value={values.multiplierSparring}
+            max={10}
+            onChange={(v) => set("multiplierSparring", v)}
+          />
+          <SettingRow
+            label="Drilling"
+            value={values.multiplierDrilling}
+            max={10}
+            onChange={(v) => set("multiplierDrilling", v)}
+          />
+          <SettingRow
+            label="Conditioning"
+            value={values.multiplierConditioning}
+            max={10}
+            onChange={(v) => set("multiplierConditioning", v)}
+          />
+          <SettingRow
+            label="Weights"
+            value={values.multiplierWeights}
+            max={10}
+            onChange={(v) => set("multiplierWeights", v)}
+          />
+        </div>
+      </motion.section>
+
+      <motion.section
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.15 }}
+      >
+        <SectionHead num="02" label="Readiness Weights" />
+        <p
+          className="mb-6"
+          style={{
+            fontFamily: "var(--font-sans)",
+            fontSize: "15px",
+            lineHeight: 1.7,
+            color: "var(--color-ink-soft)",
+          }}
         >
-          Reset to defaults
-        </button>
-      </div>
+          How much does each input move the readiness score?
+        </p>
+        <div>
+          <SettingRow
+            label="Sleep Weight"
+            value={values.sleepWeight}
+            max={5}
+            onChange={(v) => set("sleepWeight", v)}
+          />
+          <SettingRow
+            label="Soreness Weight"
+            value={values.sorenessWeight}
+            max={5}
+            onChange={(v) => set("sorenessWeight", v)}
+          />
+          <SettingRow
+            label="Stress Weight"
+            value={values.stressWeight}
+            max={5}
+            onChange={(v) => set("stressWeight", v)}
+          />
+          <SettingRow
+            label="Injury Penalty"
+            value={values.injuryPenalty}
+            max={100}
+            onChange={(v) => set("injuryPenalty", v)}
+          />
+        </div>
+      </motion.section>
+
+      <section>
+        <AnimatePresence>
+          {(saved || error) && (
+            <motion.p
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              className="mb-4 border-l-2 pl-4 py-2"
+              style={{
+                borderColor: error ? "#b91c1c" : "var(--color-accent)",
+                fontFamily: "var(--font-mono)",
+                fontSize: "12px",
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
+                color: error ? "#b91c1c" : "var(--color-ink)",
+              }}
+            >
+              {error ? "✗ Failed to save. Try again." : "✓ Saved."}
+            </motion.p>
+          )}
+        </AnimatePresence>
+
+        <div className="flex flex-wrap items-center gap-4">
+          <button
+            onClick={save}
+            disabled={!dirty || saving}
+            className="group flex items-center gap-3 border px-6 py-3 transition-all hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
+            style={{
+              backgroundColor: dirty && !saving ? "var(--color-accent)" : "transparent",
+              borderColor: dirty && !saving ? "var(--color-accent-hover)" : "var(--color-ink)",
+              color: dirty && !saving ? "var(--color-accent-ink)" : "var(--color-ink)",
+              fontFamily: "var(--font-mono)",
+              fontSize: "12px",
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "var(--tracking-label)",
+            }}
+          >
+            <span>{saving ? "Saving…" : dirty ? "Save Changes" : "No Changes"}</span>
+            {dirty && !saving && (
+              <span
+                aria-hidden="true"
+                className="transition-transform group-hover:translate-x-1"
+              >
+                →
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={resetToDefaults}
+            className="transition-opacity hover:opacity-100"
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontFamily: "var(--font-mono)",
+              fontSize: "11px",
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              color: "var(--color-ink-muted)",
+              opacity: 0.7,
+              textDecoration: "underline",
+              textUnderlineOffset: "6px",
+            }}
+          >
+            Reset to Defaults
+          </button>
+        </div>
+      </section>
     </div>
   )
 }

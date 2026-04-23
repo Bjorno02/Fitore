@@ -1,76 +1,133 @@
+"use client"
+
+import { motion } from "motion/react"
 import Link from "next/link"
-
-/* Bevel sheen on number panel */
-const PANEL_SHEEN: React.CSSProperties = {
-  background: "linear-gradient(145deg, rgba(255,255,255,0.14) 0%, transparent 45%, rgba(0,0,0,0.18) 100%)",
-}
-
-/* Lime radial glow inside number panel */
-const PANEL_GLOW: React.CSSProperties = {
-  background: "radial-gradient(ellipse at center, rgba(132,204,22,0.14) 0%, transparent 75%)",
-}
-
-/* Lime accent glow from bottom-left of card content */
-const CONTENT_GLOW: React.CSSProperties = {
-  background: "radial-gradient(ellipse 80% 70% at 0% 100%, rgba(132,204,22,0.08) 0%, transparent 70%)",
-}
-
+import { DoubleHeadedEagle, Sword } from "@/components/Ornaments"
 
 function ActionCard({
-  href, num, label, title, desc, accentA, accentB,
+  href,
+  num,
+  label,
+  title,
+  desc,
+  delay,
+  icon,
 }: {
-  href: string; num: string; label: string; title: string
-  desc: string; accentA: string; accentB: string
+  href: string
+  num: string
+  label: string
+  title: string
+  desc: string
+  delay: number
+  icon: "eagle" | "sword"
 }) {
   return (
-    <Link
-      href={href}
-      className="frost-card rounded-2xl overflow-hidden group cursor-pointer no-underline block active:scale-[0.98] active:brightness-95 transition-transform"
-      style={{ borderTop: "1px solid rgba(132,204,22,0.22)" }}
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.55, delay }}
     >
-      <div className="flex" style={{ minHeight: 176 }}>
-
-        {/* Number panel */}
+      <Link
+        href={href}
+        className="card-raised card-raised-hover group relative block overflow-hidden p-8 no-underline"
+        style={{ minHeight: "260px" }}
+      >
+        {/* Corner sword decoration */}
         <div
-          className="relative flex items-center justify-center flex-shrink-0 overflow-hidden"
-          style={{ width: 96, background: `linear-gradient(160deg, ${accentA} 0%, ${accentB} 100%)` }}
+          className="pointer-events-none absolute"
+          style={{
+            top: "16px",
+            right: "16px",
+            opacity: 0.12,
+            transition: "opacity 0.3s ease, transform 0.4s ease",
+          }}
+          aria-hidden="true"
         >
-          <div className="absolute inset-0" style={PANEL_SHEEN} />
-          <div className="absolute inset-0" style={PANEL_GLOW} />
-          {/* Vertical lime hairline on right edge */}
-          <div className="absolute right-0 inset-y-4" style={{ width: 1, background: "linear-gradient(180deg, transparent, rgba(132,204,22,0.30), transparent)" }} />
-          <span className="relative select-none" style={{
-            fontFamily: "var(--font-barlow)",
-            fontWeight: 900,
-            fontSize: "4rem",
-            color: "rgba(255,255,255,0.22)",
-            letterSpacing: "-0.03em",
-            lineHeight: 1,
-          }}>{num}</span>
+          {icon === "eagle" ? (
+            <DoubleHeadedEagle size={80} color="var(--color-ink)" />
+          ) : (
+            <Sword size={36} color="var(--color-ink)" strokeWidth={1} />
+          )}
         </div>
 
-        {/* Content */}
-        <div className="relative flex-1 px-7 py-6 flex flex-col overflow-hidden">
-          <div className="absolute inset-0 pointer-events-none" style={CONTENT_GLOW} />
-          <div className="relative flex flex-col flex-1">
-            <p className="frost-label mb-3">{label}</p>
-            <h2 className="wordmark text-2xl mb-2 leading-tight" style={{ color: "#84cc16" }}>{title}</h2>
-            <p className="text-sm leading-relaxed" style={{ color: "rgba(148,163,184,0.62)" }}>{desc}</p>
-            <div
-              className="mt-auto pt-3 flex items-center justify-between"
-              style={{ borderTop: "1px solid rgba(148,163,184,0.09)" }}
+        <div className="relative flex h-full flex-col">
+          {/* Top: bracket reference */}
+          <div
+            className="mb-6 flex items-baseline justify-between border-b pb-3"
+            style={{ borderColor: "var(--color-rule)" }}
+          >
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "var(--text-eyebrow)",
+                letterSpacing: "var(--tracking-eyebrow)",
+                textTransform: "uppercase",
+                color: "var(--color-ink-muted)",
+              }}
             >
-              <span className="text-xs tracking-widest uppercase" style={{ color: "rgba(148,163,184,0.38)" }}>Enter</span>
-              <span
-                className="transition-transform duration-200 group-hover:translate-x-1.5"
-                style={{ color: "rgba(132,204,22,0.65)", fontSize: "1.05rem" }}
-              >→</span>
-            </div>
+              <span style={{ color: "var(--color-accent)" }}>[§</span> {num}{" "}
+              <span style={{ color: "var(--color-accent)" }}>]</span> {label}
+            </span>
+          </div>
+
+          {/* Title with gradient text */}
+          <h2
+            className="mb-4 gradient-text-ink"
+            style={{
+              fontFamily: "var(--font-barlow)",
+              fontWeight: 800,
+              fontSize: "var(--text-display-md)",
+              lineHeight: "var(--leading-display)",
+              letterSpacing: "var(--tracking-display)",
+              textTransform: "uppercase",
+            }}
+          >
+            {title}
+          </h2>
+
+          {/* Description */}
+          <p
+            className="mb-6"
+            style={{
+              fontFamily: "var(--font-sans)",
+              fontSize: "15px",
+              lineHeight: 1.6,
+              color: "var(--color-ink-soft)",
+            }}
+          >
+            {desc}
+          </p>
+
+          {/* Footer: Enter + arrow — gradient button style */}
+          <div
+            className="mt-auto flex items-center justify-between border-t pt-4"
+            style={{ borderColor: "var(--color-rule-strong)" }}
+          >
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "var(--text-eyebrow)",
+                letterSpacing: "var(--tracking-eyebrow)",
+                textTransform: "uppercase",
+                color: "var(--color-ink-muted)",
+              }}
+            >
+              Enter
+            </span>
+            <span
+              aria-hidden="true"
+              className="transition-transform group-hover:translate-x-1"
+              style={{
+                color: "var(--color-accent)",
+                fontSize: "20px",
+              }}
+            >
+              →
+            </span>
           </div>
         </div>
-
-      </div>
-    </Link>
+      </Link>
+    </motion.div>
   )
 }
 
@@ -78,36 +135,31 @@ type Props = { isCoach: boolean }
 
 export default function HomeCards({ isCoach }: Props) {
   return (
-    <div className="w-full frost-enter-3" style={{ maxWidth: 960 }}>
-      <div className="flex flex-col sm:flex-row gap-24">
-
-        <div className="flex-1">
-          <ActionCard
-            href="/athlete"
-            num="01"
-            label="Athlete"
-            title="Log Training"
-            desc="Record sessions & daily check-ins"
-            accentA="#18181b"
-            accentB="#27272a"
-          />
-        </div>
-
+    <section className="relative">
+      <div
+        className={`grid grid-cols-1 gap-6 ${isCoach ? "md:grid-cols-2" : ""}`}
+      >
+        <ActionCard
+          href="/athlete"
+          num="01"
+          label="Athlete"
+          title="Log Training"
+          desc="Record today's session and daily check-in. Stay honest with yourself."
+          delay={0.1}
+          icon="sword"
+        />
         {isCoach && (
-          <div className="flex-1">
-            <ActionCard
-              href="/dashboard"
-              num="02"
-              label="Coach"
-              title="Dashboard"
-              desc="Athlete load & readiness"
-              accentA="#141417"
-              accentB="#1c1c1f"
-            />
-          </div>
+          <ActionCard
+            href="/dashboard"
+            num="02"
+            label="Coach"
+            title="Dashboard"
+            desc="See athlete load and readiness across the gym. Approve new members."
+            delay={0.2}
+            icon="eagle"
+          />
         )}
-
       </div>
-    </div>
+    </section>
   )
 }

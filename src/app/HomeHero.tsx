@@ -1,139 +1,177 @@
-import { GiCrossedSwords } from "react-icons/gi"
+"use client"
 
-const BLOOM: React.CSSProperties = {
-  background: "radial-gradient(ellipse 60% 80% at 50% 52%, rgba(132,204,22,0.10) 0%, transparent 70%)",
-}
-
-function CornerBrackets() {
-  const S = 22, T = 16
-  const B = "1.5px solid rgba(132,204,22,0.35)"
-  return (
-    <>
-      <div style={{ position: "absolute", top: T, left: T, width: S, height: S, borderTop: B, borderLeft: B }} />
-      <div style={{ position: "absolute", top: T, right: T, width: S, height: S, borderTop: B, borderRight: B }} />
-      <div style={{ position: "absolute", bottom: T, left: T, width: S, height: S, borderBottom: B, borderLeft: B }} />
-      <div style={{ position: "absolute", bottom: T, right: T, width: S, height: S, borderBottom: B, borderRight: B }} />
-    </>
-  )
-}
-
-function LeftStripes() {
-  const stripes = [
-    { h: "52%", opacity: 0.60 },
-    { h: "74%", opacity: 0.42 },
-    { h: "36%", opacity: 0.28 },
-  ]
-  return (
-    <div className="absolute top-0 bottom-0 flex items-center gap-2.5" style={{ left: "calc(50% - 36rem)" }} aria-hidden="true">
-      {stripes.map(({ h, opacity }, i) => (
-        <div
-          key={i}
-          style={{
-            width: 2,
-            height: h,
-            borderRadius: 999,
-            background: `linear-gradient(180deg, transparent 0%, rgba(132,204,22,${opacity}) 20%, rgba(132,204,22,${opacity}) 80%, transparent 100%)`,
-            boxShadow: `0 0 7px rgba(132,204,22,${opacity * 0.55})`,
-          }}
-        />
-      ))}
-    </div>
-  )
-}
-
-function CrossedSwordsIcon() {
-  return (
-    <div className="absolute top-0 bottom-0 flex items-center" style={{ right: "calc(50% - 38rem)" }} aria-hidden="true">
-      <GiCrossedSwords
-        size={100}
-        style={{
-          color: "rgba(132,204,22,0.55)",
-          filter: "drop-shadow(0 0 6px rgba(132,204,22,0.50)) drop-shadow(0 0 18px rgba(132,204,22,0.20))",
-        }}
-      />
-    </div>
-  )
-}
+import { motion } from "motion/react"
+import { DoubleHeadedEagle, DotGrid } from "@/components/Ornaments"
 
 type Props = { gymName: string; userName: string | null | undefined }
 
 export default function HomeHero({ gymName, userName }: Props) {
   const now = new Date()
-  const dateStr = now.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })
+  const dateStr = now.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  })
 
   return (
-    <div
-      className="relative overflow-hidden flex flex-col items-center justify-center text-center px-10"
-      style={{
-        background: "linear-gradient(160deg, #040801 0%, #000000 55%, #020500 100%)",
-        borderBottom: "1px solid rgba(132,204,22,0.28)",
-        boxShadow: "0 6px 48px rgba(4,10,22,0.45)",
-        minHeight: 320,
-      }}
-    >
-      <div className="absolute inset-0 pointer-events-none" style={BLOOM} />
-      <CornerBrackets />
-      <LeftStripes />
-      <CrossedSwordsIcon />
-
-      {/* Glowing accent bar */}
+    <section className="relative overflow-hidden">
+      {/* Large faint double-headed eagle — right side, decorative */}
       <div
-        className="relative mb-2 frost-enter"
+        className="pointer-events-none absolute hidden lg:block"
         style={{
-          width: 100,
-          height: 3,
-          borderRadius: 999,
-          background: "linear-gradient(90deg, transparent, #84cc16, #a3e635, #84cc16, transparent)",
-          boxShadow: "0 0 10px rgba(132,204,22,0.85), 0 0 28px rgba(132,204,22,0.45), 0 0 56px rgba(132,204,22,0.18)",
+          top: "30%",
+          right: "5%",
+          opacity: 0.06,
+        }}
+        aria-hidden="true"
+      >
+        <DoubleHeadedEagle size={240} color="var(--color-ink)" />
+      </div>
+
+      {/* Faint dot grid — bottom-left */}
+      <DotGrid
+        cols={18}
+        rows={8}
+        size={2}
+        gap={11}
+        color="var(--color-ink)"
+        style={{
+          position: "absolute",
+          bottom: 40,
+          left: 40,
+          opacity: 0.08,
+          pointerEvents: "none",
         }}
       />
 
-      {/* Gym name — animated sweep */}
-      <h1
-        className="wordmark-frost relative mb-4 frost-enter"
-        style={{ fontSize: "clamp(3rem, 7vw, 5.5rem)", letterSpacing: "0.06em" }}
-      >
-        {gymName}
-      </h1>
-
-      {/* Tagline */}
-      <p
-        className="relative mb-8 frost-enter-2"
-        style={{
-          fontSize: "0.7rem",
-          fontWeight: 700,
-          letterSpacing: "0.22em",
-          textTransform: "uppercase",
-          color: "rgba(132,204,22,0.35)",
-        }}
-      >
-        Your Training · Quantified
-      </p>
-
-      {/* Status pill */}
-      <div
-        className="relative flex items-center gap-5 px-5 py-2 frost-enter-2"
-        style={{
-          border: "1px solid rgba(132,204,22,0.13)",
-          borderRadius: 999,
-          background: "rgba(132,204,22,0.025)",
-        }}
-      >
-        <div className="flex items-center gap-2">
-          <div
-            className="w-1.5 h-1.5 rounded-full shrink-0"
-            style={{ background: "#84cc16", boxShadow: "0 0 7px rgba(132,204,22,0.95)" }}
-          />
-          <span className="text-xs tracking-[0.13em] uppercase" style={{ color: "rgba(132,204,22,0.38)" }}>
-            {dateStr}
+      <div className="relative mx-auto max-w-6xl px-6 pb-20 pt-16 md:px-12 md:pb-28 md:pt-24">
+        {/* Masthead meta strip */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="mb-12 flex flex-wrap items-center gap-3 border-b pb-4"
+          style={{
+            borderColor: "var(--color-rule-strong)",
+            fontFamily: "var(--font-mono)",
+            fontSize: "var(--text-eyebrow)",
+            letterSpacing: "var(--tracking-eyebrow)",
+            textTransform: "uppercase",
+            color: "var(--color-ink-muted)",
+          }}
+        >
+          <span aria-hidden="true" className="relative inline-flex h-2 w-2">
+            <span
+              className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60"
+              style={{ backgroundColor: "var(--color-accent)" }}
+            />
+            <span
+              className="relative inline-flex h-2 w-2 rounded-full"
+              style={{ backgroundColor: "var(--color-accent)" }}
+            />
           </span>
-        </div>
-        <div style={{ width: 1, height: 11, background: "rgba(132,204,22,0.16)" }} />
-        <span className="text-xs tracking-[0.13em] uppercase" style={{ color: "rgba(132,204,22,0.38)" }}>
-          {userName}
-        </span>
-      </div>
+          <span style={{ color: "var(--color-ink)" }}>Live</span>
+          <span style={{ color: "var(--color-ink-faint)" }}>·</span>
+          <span>{dateStr}</span>
+          {userName && (
+            <>
+              <span style={{ color: "var(--color-ink-faint)" }}>·</span>
+              <span>{userName}</span>
+            </>
+          )}
+          <span
+            className="ml-auto hidden md:flex items-center gap-2"
+            style={{ color: "var(--color-ink-faint)" }}
+          >
+            <span>Your Training</span>
+            <span style={{ color: "var(--color-accent)" }}>·</span>
+            <span>Quantified</span>
+          </span>
+        </motion.div>
 
-    </div>
+        {/* Eyebrow with bracket reference */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mb-10 flex flex-wrap items-baseline gap-4"
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "var(--text-eyebrow)",
+            letterSpacing: "var(--tracking-eyebrow)",
+            textTransform: "uppercase",
+            color: "var(--color-ink-muted)",
+          }}
+        >
+          <span style={{ color: "var(--color-ink)" }}>
+            <span style={{ color: "var(--color-accent)" }}>[</span>Home
+            <span style={{ color: "var(--color-accent)" }}>]</span>
+          </span>
+          <span>—</span>
+          <span>Welcome back</span>
+        </motion.div>
+
+        {/* Stacked wordmark with gradient fill */}
+        <h1
+          className="gradient-text-ink"
+          style={{
+            fontFamily: "var(--font-barlow)",
+            fontWeight: 800,
+            fontSize: "var(--text-display-xl)",
+            lineHeight: "var(--leading-display)",
+            letterSpacing: "var(--tracking-display)",
+            textTransform: "uppercase",
+          }}
+        >
+          <div style={{ overflow: "hidden" }}>
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              style={{ display: "inline-block" }}
+            >
+              {gymName}
+            </motion.div>
+            <motion.span
+              style={{
+                color: "var(--color-accent)",
+                display: "inline-block",
+                WebkitTextFillColor: "var(--color-accent)",
+              }}
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{
+                delay: 0.55,
+                duration: 0.45,
+                type: "spring",
+                stiffness: 260,
+                damping: 12,
+              }}
+            >
+              .
+            </motion.span>
+          </div>
+        </h1>
+
+        {/* Subhead */}
+        <motion.p
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9, duration: 0.6 }}
+          className="mt-10 max-w-xl"
+          style={{
+            fontFamily: "var(--font-sans)",
+            fontSize: "18px",
+            lineHeight: 1.7,
+            color: "var(--color-ink-soft)",
+          }}
+        >
+          Pick up where you left off. Log a session, check in for the day, or step
+          into the coach dashboard.{" "}
+          <em style={{ color: "var(--color-ink)" }}>Two numbers, no noise.</em>
+        </motion.p>
+      </div>
+    </section>
   )
 }
