@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Barlow_Condensed, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar"
-import OrbLayer from "@/components/OrbLayer";
+import Footer from "@/components/Footer"
 
 const barlow = Barlow_Condensed({
   variable: "--font-barlow",
@@ -28,12 +28,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* No-flash theme init — runs before React hydration */}
+        <script src="/theme-init.js" />
+      </head>
       <body
         className={`${barlow.variable} ${jakarta.variable} antialiased`}
       >
-        <OrbLayer />
         <Navbar />
         {children}
+        <Footer />
       </body>
     </html>
   );

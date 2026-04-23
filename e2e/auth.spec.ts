@@ -16,3 +16,8 @@ test("API returns 401 without session", async ({ request }) => {
   })
   expect(res.status()).toBe(401)
 })
+
+test("unauthenticated user cannot access athlete history page", async ({ page }) => {
+  await page.goto("/athlete/history")
+  await expect(page).toHaveURL(/api\/auth\/signin/)
+})

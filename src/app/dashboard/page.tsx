@@ -1,135 +1,195 @@
 import { redirect } from "next/navigation"
+import Link from "next/link"
 import { auth } from "@/auth"
 import prisma from "@/lib/prisma"
-import { calcLoad, calcReadiness } from "@/lib/scoring"
 import PendingRequests from "./PendingRequests"
 import PageHeader from "@/components/PageHeader"
+import CalendarPanel from "./CalendarPanel"
 
 export default async function DashboardPage() {
   const session = await auth()
   if (!session?.user?.id) redirect("/login")
 
   const membership = await prisma.membership.findFirst({
-    where: { userId: session.user.id, role: { in: ["COACH", "ADMIN"] }, status: "ACTIVE" },
+    where: {
+      userId: session.user.id,
+      role: { in: ["COACH", "ADMIN"] },
+      status: "ACTIVE",
+    },
     include: { gym: true },
   })
 
   if (!membership) {
     return (
-      <main className="flex min-h-screen items-center justify-center">
-        <p className="text-text-muted">You are not a coach at any gym.</p>
+      <main className="mx-auto max-w-6xl px-6 py-24 md:px-12">
+        <p
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "14px",
+            textTransform: "uppercase",
+            letterSpacing: "var(--tracking-label)",
+            color: "var(--color-ink-muted)",
+          }}
+        >
+          — You are not a coach at any gym —
+        </p>
       </main>
     )
   }
 
-  const pendingRequests = membership.role === "ADMIN"
-    ? await prisma.membership.findMany({
-        where: { gymId: membership.gymId, status: "PENDING" },
-        include: { user: { select: { id: true, name: true, email: true } } },
-      })
-    : []
+  const pendingRequests =
+    membership.role === "ADMIN"
+      ? await prisma.membership.findMany({
+          where: { gymId: membership.gymId, status: "PENDING" },
+          include: { user: { select: { id: true, name: true, email: true } } },
+        })
+      : []
 
-  const [sessions, checkins] = await Promise.all([
-    prisma.trainingSession.findMany({
-      where: { gymId: membership.gymId },
-      include: { user: { select: { name: true, email: true } } },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.checkIn.findMany({
-      where: { gymId: membership.gymId },
-      include: { user: { select: { name: true, email: true } } },
-      orderBy: { createdAt: "desc" },
-    }),
+  // Month summary for calendar — group check-in counts by date (UTC)
+  const now = new Date()
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
+  const monthEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1))
+
+  const monthCheckIns = await prisma.checkIn.findMany({
+    where: {
+      gymId: membership.gymId,
+      createdAt: { gte: monthStart, lt: monthEnd },
+    },
+    select: { createdAt: true },
+  })
+
+  const monthSummary: Record<string, number> = {}
+  for (const c of monthCheckIns) {
+    const date = c.createdAt.toISOString().split("T")[0]
+    monthSummary[date] = (monthSummary[date] ?? 0) + 1
+  }
+
+  const todayStr = now.toISOString().split("T")[0]
+
+  const [sessionCount, checkinCount] = await Promise.all([
+    prisma.trainingSession.count({ where: { gymId: membership.gymId } }),
+    prisma.checkIn.count({ where: { gymId: membership.gymId } }),
   ])
 
   return (
-    <main className="flex-1 flex flex-col">
-      <PageHeader
-        label="Coach Dashboard"
-        title={membership.gym.name}
-      />
-      <div className="flex-1 px-6 py-10">
-      <div className="max-w-5xl mx-auto">
-
-        {/* Stat strip */}
-        <div className="frost-card rounded-xl overflow-hidden mb-10 frost-enter-2">
-          <div className="flex">
-            <div className="frost-stat">
-              <span className="frost-stat-value">{sessions.length}</span>
-              <span className="frost-stat-label">Sessions</span>
+    <main>
+      <PageHeader label="Coach Dashboard" title={membership.gym.name} />
+      <div className="mx-auto max-w-6xl px-6 pb-24 md:px-12">
+        {/* Stat strip + settings shortcut */}
+        <section className="mb-16 grid grid-cols-1 gap-8 md:grid-cols-[1fr_auto]">
+          <div
+            className="border-t pt-6"
+            style={{ borderColor: "var(--color-rule-strong)" }}
+          >
+            <div
+              className="mb-6"
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "var(--text-eyebrow)",
+                letterSpacing: "var(--tracking-eyebrow)",
+                textTransform: "uppercase",
+                color: "var(--color-ink-muted)",
+              }}
+            >
+              <span style={{ color: "var(--color-accent)" }}>§ 01</span> Gym Overview
             </div>
-            <div className="frost-stat">
-              <span className="frost-stat-value">{checkins.length}</span>
-              <span className="frost-stat-label">Check-ins</span>
-            </div>
-            <div className="frost-stat">
-              <span className="frost-stat-value">{pendingRequests.length}</span>
-              <span className="frost-stat-label">Pending</span>
+            <div className="grid grid-cols-3 gap-8">
+              {[
+                { value: sessionCount, label: "Sessions" },
+                { value: checkinCount, label: "Check-ins" },
+                { value: pendingRequests.length, label: "Pending" },
+              ].map((stat, i) => (
+                <div key={stat.label} className="flex flex-col">
+                  <span
+                    style={{
+                      fontFamily: "var(--font-barlow)",
+                      fontWeight: 800,
+                      fontSize: "var(--text-display-md)",
+                      lineHeight: 1,
+                      letterSpacing: "var(--tracking-display)",
+                      color:
+                        i === 2 && stat.value > 0
+                          ? "var(--color-accent)"
+                          : "var(--color-ink)",
+                    }}
+                  >
+                    {stat.value}
+                  </span>
+                  <span
+                    className="mt-3"
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "var(--text-eyebrow)",
+                      letterSpacing: "var(--tracking-label)",
+                      textTransform: "uppercase",
+                      color: "var(--color-ink-muted)",
+                    }}
+                  >
+                    {stat.label}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
+
+          <Link
+            href="/dashboard/settings"
+            className="group flex flex-col items-start justify-between border px-6 py-6 no-underline transition-all hover:-translate-y-0.5"
+            style={{
+              borderColor: "var(--color-ink)",
+              color: "var(--color-ink)",
+              minWidth: "200px",
+            }}
+          >
+            <div
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "var(--text-eyebrow)",
+                letterSpacing: "var(--tracking-eyebrow)",
+                textTransform: "uppercase",
+                color: "var(--color-ink-muted)",
+              }}
+            >
+              <span style={{ color: "var(--color-accent)" }}>§ 02</span> Configure
+            </div>
+            <div className="mt-4 flex items-end justify-between w-full">
+              <span
+                style={{
+                  fontFamily: "var(--font-barlow)",
+                  fontWeight: 800,
+                  fontSize: "var(--text-display-sm)",
+                  lineHeight: 1,
+                  letterSpacing: "var(--tracking-display)",
+                  textTransform: "uppercase",
+                }}
+              >
+                Weights
+              </span>
+              <span
+                aria-hidden="true"
+                className="transition-transform group-hover:translate-x-1"
+                style={{
+                  color: "var(--color-accent)",
+                  fontSize: "20px",
+                }}
+              >
+                →
+              </span>
+            </div>
+          </Link>
+        </section>
 
         {/* Pending requests */}
         {pendingRequests.length > 0 && (
-          <div className="mb-8 frost-enter-2">
-            <PendingRequests requests={pendingRequests} />
-          </div>
+          <PendingRequests requests={pendingRequests} />
         )}
 
-        {/* 2-column grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 frost-enter-3">
-
-          {/* Training Sessions */}
-          <section>
-            <p className="frost-label mb-3">Training Sessions</p>
-            <div className="frost-card rounded-xl overflow-hidden">
-              {sessions.length === 0 ? (
-                <p className="text-text-muted text-sm px-5 py-6 text-center">No sessions logged yet.</p>
-              ) : sessions.map((s, i) => (
-                <div key={s.id} className={`px-5 py-4 ${i !== sessions.length - 1 ? "frost-row" : ""}`}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-semibold text-sm truncate max-w-[140px]">
-                      {s.user.name ?? s.user.email}
-                    </span>
-                    <span className="badge-load text-xs px-2.5 py-1 rounded-lg shrink-0">
-                      {calcLoad(s.duration, s.intensity, s.type).toFixed(0)}
-                    </span>
-                  </div>
-                  <p className="text-xs" style={{ color: "rgba(148,163,184,0.6)" }}>
-                    {s.type} · {s.duration}min · ×{s.intensity}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Check-ins */}
-          <section>
-            <p className="frost-label mb-3">Check-ins</p>
-            <div className="frost-card rounded-xl overflow-hidden">
-              {checkins.length === 0 ? (
-                <p className="text-text-muted text-sm px-5 py-6 text-center">No check-ins yet.</p>
-              ) : checkins.map((c, i) => (
-                <div key={c.id} className={`px-5 py-4 ${i !== checkins.length - 1 ? "frost-row" : ""}`}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-semibold text-sm truncate max-w-[140px]">
-                      {c.user.name ?? c.user.email}
-                    </span>
-                    <span className="badge-load text-xs px-2.5 py-1 rounded-lg shrink-0">
-                      {calcReadiness(c.sleep, c.soreness, c.stress, c.injury).toFixed(0)}
-                    </span>
-                  </div>
-                  <p className="text-xs" style={{ color: "rgba(148,163,184,0.6)" }}>
-                    sleep {c.sleep} · soreness {c.soreness} · stress {c.stress}
-                    {c.injury ? " · injury" : ""}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-        </div>
-      </div>
+        {/* Calendar + day panel */}
+        <CalendarPanel
+          gymId={membership.gymId}
+          initialMonthSummary={monthSummary}
+          initialDate={todayStr}
+        />
       </div>
     </main>
   )

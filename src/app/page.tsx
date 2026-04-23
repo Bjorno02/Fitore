@@ -1,6 +1,7 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import prisma from "@/lib/prisma"
+import Link from "next/link"
 import HomeHero from "./HomeHero"
 import HomeCards from "./HomeCards"
 
@@ -17,29 +18,96 @@ export default async function Home() {
 
   if (membership.status === "PENDING") {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-6 px-6">
-        <p className="wordmark-frost text-4xl tracking-widest frost-enter">MartialOps</p>
-        <div className="w-16 h-px frost-enter"
-          style={{ background: "linear-gradient(90deg, transparent, #84cc16, transparent)" }} />
-        <div className="frost-card rounded-2xl px-10 py-8 text-center frost-enter-2" style={{ maxWidth: 380 }}>
-          <p className="font-semibold text-lg mb-1">{membership.gym.name}</p>
-          <p className="text-text-secondary text-sm mt-1">Your request to join is pending approval.</p>
-          <p className="text-text-muted text-xs mt-2">The coach will review it soon.</p>
+      <main className="mx-auto max-w-3xl px-6 py-32 md:px-12">
+        <div
+          className="border-t pt-6"
+          style={{ borderColor: "var(--color-rule-strong)" }}
+        >
+          <div
+            className="mb-6 flex items-center gap-3"
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "var(--text-eyebrow)",
+              letterSpacing: "var(--tracking-eyebrow)",
+              textTransform: "uppercase",
+              color: "var(--color-ink-muted)",
+            }}
+          >
+            <span
+              aria-hidden="true"
+              className="inline-block"
+              style={{
+                width: "6px",
+                height: "6px",
+                backgroundColor: "var(--color-accent)",
+                transform: "rotate(45deg)",
+              }}
+            />
+            <span>Pending Approval</span>
+          </div>
+          <h1
+            style={{
+              fontFamily: "var(--font-barlow)",
+              fontWeight: 800,
+              fontSize: "var(--text-display-lg)",
+              lineHeight: "var(--leading-display)",
+              letterSpacing: "var(--tracking-display)",
+              textTransform: "uppercase",
+              color: "var(--color-ink)",
+            }}
+          >
+            {membership.gym.name}
+            <span style={{ color: "var(--color-accent)" }}>.</span>
+          </h1>
+          <p
+            className="mt-8 max-w-xl"
+            style={{
+              fontFamily: "var(--font-sans)",
+              fontSize: "18px",
+              lineHeight: 1.7,
+              color: "var(--color-ink-soft)",
+            }}
+          >
+            Your request to join is pending approval. A coach will review it soon.
+          </p>
         </div>
       </main>
     )
   }
 
-  const isCoach = membership.role === "COACH" || membership.role === "ADMIN"
+  const isCoach =
+    membership.role === "COACH" || membership.role === "ADMIN"
 
   return (
-    <main className="flex-1 flex flex-col lg:flex-row frost-enter" style={{ minHeight: 0 }}>
-      <div style={{ flex: 2, display: "flex", flexDirection: "column" }}>
-        <HomeHero gymName={membership.gym.name} userName={session.user.name} />
-      </div>
-      <div className="hidden lg:block metallic-strip" />
-      <div style={{ flex: 3, display: "flex", flexDirection: "column" }}>
+    <main>
+      <HomeHero
+        gymName={membership.gym.name}
+        userName={session.user.name}
+      />
+      <div className="mx-auto max-w-6xl px-6 pb-24 md:px-12">
         <HomeCards isCoach={isCoach} />
+        <div className="mt-20 flex justify-center">
+          <Link
+            href="/how-it-works"
+            className="group inline-flex items-center gap-3 transition-opacity hover:opacity-100"
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "var(--text-eyebrow)",
+              letterSpacing: "var(--tracking-eyebrow)",
+              textTransform: "uppercase",
+              color: "var(--color-ink)",
+              opacity: 0.7,
+            }}
+          >
+            <span>How It Works</span>
+            <span
+              style={{ color: "var(--color-accent)" }}
+              className="transition-transform group-hover:translate-x-1"
+            >
+              →
+            </span>
+          </Link>
+        </div>
       </div>
     </main>
   )
