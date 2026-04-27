@@ -9,9 +9,9 @@ const prisma = new PrismaClient({ adapter });
 
 async function main() {
   const user = await prisma.user.upsert({
-    where: { email: "dev@martialops.local" },
+    where: { email: "dev@fitore.local" },
     update: {},
-    create: { email: "dev@martialops.local", name: "Dev Athlete" },
+    create: { email: "dev@fitore.local", name: "Dev Athlete" },
   });
 
   const gym =

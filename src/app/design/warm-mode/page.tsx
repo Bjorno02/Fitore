@@ -302,7 +302,7 @@ export default function WarmModeLab() {
           color: "var(--color-ink)",
         }}
       >
-        <span>MartialOps · Warm Mode Lab</span>
+        <span>Fitore · Warm Mode Lab</span>
         <span style={{ opacity: 0.6 }}>10 variants · Pair with Glacial Sky</span>
       </div>
 

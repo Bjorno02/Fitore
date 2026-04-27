@@ -4,6 +4,7 @@ import { signIn } from "next-auth/react"
 import { motion } from "motion/react"
 import { useState } from "react"
 import { DoubleHeadedEagle, DotGrid } from "@/components/Ornaments"
+import ThemeToggle from "@/components/ThemeToggle"
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false)
@@ -14,8 +15,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden">
-      {/* Faint eagle backdrop */}
+    <main className="relative h-screen overflow-hidden">
       <div
         className="pointer-events-none absolute hidden lg:block"
         style={{
@@ -28,7 +28,7 @@ export default function LoginPage() {
         <DoubleHeadedEagle size={280} color="var(--color-ink)" />
       </div>
 
-      {/* Faint dot texture */}
+{/* Faint dot texture */}
       <DotGrid
         cols={16}
         rows={7}
@@ -44,34 +44,17 @@ export default function LoginPage() {
         }}
       />
 
-      {/* ── Masthead strip ──────────────────────────────────── */}
-      <div className="mx-auto max-w-6xl px-6 md:px-12">
-        <div
-          className="flex flex-wrap items-center justify-between gap-3 border-b py-4"
-          style={{
-            borderColor: "var(--color-rule)",
-            fontFamily: "var(--font-mono)",
-            fontSize: "var(--text-eyebrow)",
-            letterSpacing: "var(--tracking-eyebrow)",
-            textTransform: "uppercase",
-            color: "var(--color-ink-muted)",
-          }}
-        >
-          <span>
-            MartialOps<span style={{ color: "var(--color-accent)" }}>.</span>
-          </span>
-          <span className="hidden md:inline">Combat Sports Operations</span>
-          <span>Access · Secure</span>
-        </div>
+      <div className="fixed inset-x-0 top-16 z-50 flex justify-center md:top-24">
+        <ThemeToggle />
       </div>
 
       {/* ── Content ─────────────────────────────────────────── */}
-      <section className="mx-auto flex min-h-[calc(100vh-220px)] max-w-6xl flex-col items-start justify-center px-6 py-16 md:px-12">
+      <section className="mx-auto flex h-full max-w-6xl flex-col items-center justify-center px-6 pb-16 pt-40 text-center md:px-12 md:pb-20 md:pt-52">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="mb-10 flex items-center gap-3"
+          className="mb-10 flex items-center justify-center gap-3"
           style={{
             fontFamily: "var(--font-mono)",
             fontSize: "var(--text-eyebrow)",

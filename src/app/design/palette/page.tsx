@@ -192,7 +192,7 @@ export default function PalettePlayground() {
         className="sticky top-0 z-50 flex items-center justify-between border-b border-black/10 bg-white/80 px-8 py-4 backdrop-blur"
         style={{ fontFamily: "ui-monospace, SFMono-Regular, monospace" }}
       >
-        <div className="text-xs uppercase tracking-[0.3em]">MartialOps · Palette Lab</div>
+        <div className="text-xs uppercase tracking-[0.3em]">Fitore · Palette Lab</div>
         <div className="text-[11px] uppercase tracking-[0.25em] opacity-60">
           Scroll through 5 variants
         </div>

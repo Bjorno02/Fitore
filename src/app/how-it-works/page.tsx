@@ -140,16 +140,16 @@ function SectionBlock({
             <span style={{ color: "var(--color-accent)" }}>.</span>
           </h2>
 
-          {/* Body with drop cap */}
+          {/* Body with accent drop cap */}
           <div
             className="max-w-2xl"
             style={{
               fontFamily: "var(--font-sans)",
-              color: "var(--color-ink-soft)",
+              color: "var(--color-ink)",
             }}
           >
             <div
-              className="text-lg md:text-xl [&>p]:leading-[1.75] [&>p:first-child::first-letter]:float-left [&>p:first-child::first-letter]:pr-3 [&>p:first-child::first-letter]:pt-1 [&>p:first-child::first-letter]:leading-[0.82] [&>p:first-child::first-letter]:font-[family-name:var(--font-barlow)] [&>p:first-child::first-letter]:text-[5.5rem] [&>p:first-child::first-letter]:font-extrabold [&>p:first-child::first-letter]:uppercase [&>p:first-child::first-letter]:text-[color:var(--color-ink)]"
+              className="text-lg md:text-xl [&>p]:leading-[1.75] [&>p:first-child::first-letter]:float-left [&>p:first-child::first-letter]:pr-3 [&>p:first-child::first-letter]:pt-1 [&>p:first-child::first-letter]:leading-[0.82] [&>p:first-child::first-letter]:font-[family-name:var(--font-barlow)] [&>p:first-child::first-letter]:text-[5.5rem] [&>p:first-child::first-letter]:font-extrabold [&>p:first-child::first-letter]:uppercase [&>p:first-child::first-letter]:text-[color:var(--color-accent)]"
             >
               {children}
             </div>
@@ -220,7 +220,7 @@ export default function HowItWorksPage() {
           }}
         >
           <span>
-            MartialOps<span style={{ color: "var(--color-accent)" }}>.</span>
+            Fitore<span style={{ color: "var(--color-accent)" }}>.</span>
           </span>
           <span className="hidden md:inline">
             No. 01 · The Method · Apr 2026
@@ -361,12 +361,12 @@ export default function HowItWorksPage() {
               textWrap: "pretty",
             }}
           >
-            MartialOps reduces training to two honest numbers.{" "}
-            <strong style={{ color: "var(--color-ink)" }}>Readiness</strong> tells you what
-            you can do today.{" "}
-            <strong style={{ color: "var(--color-ink)" }}>Training Load</strong> tells you
-            what you actually did.{" "}
-            <em style={{ color: "var(--color-ink)", fontStyle: "italic" }}>
+            Fitore reduces training to two honest numbers.{" "}
+            <strong style={{ color: "var(--color-accent)" }}>Readiness</strong> tells you
+            what you can do today.{" "}
+            <strong style={{ color: "var(--color-accent)" }}>Training Load</strong> tells
+            you what you actually did.{" "}
+            <em style={{ color: "var(--color-ink)", fontStyle: "italic", fontWeight: 600 }}>
               Everything else is noise.
             </em>
           </motion.p>
@@ -449,44 +449,41 @@ export default function HowItWorksPage() {
 
       <DiamondDivider />
 
-      {/* ── Inverted "credo" section ──────────────────────── */}
       <motion.section
         ref={inversionRef}
         className="relative overflow-hidden"
         style={{
-          backgroundColor: "var(--color-ink)",
-          color: "var(--color-canvas)",
+          backgroundColor: "var(--color-accent)",
+          color: "var(--color-accent-ink)",
+          borderBottom: "6px solid var(--color-canvas)",
         }}
         initial={{ opacity: 0 }}
         animate={inversionInView ? { opacity: 1 } : {}}
         transition={{ duration: 0.6 }}
       >
-        {/* Corner brackets in cream */}
         <CornerBrackets
-          color="rgba(246, 220, 159, 0.35)"
+          color="rgba(242, 232, 213, 0.5)"
           size={28}
           thickness={1}
           inset={20}
         />
 
-        {/* Faint dot texture in cream */}
         <DotGrid
           cols={22}
           rows={10}
           size={2}
           gap={11}
-          color="var(--color-canvas)"
+          color="var(--color-accent-ink)"
           style={{
             position: "absolute",
             top: 60,
             right: 60,
-            opacity: 0.07,
+            opacity: 0.1,
             pointerEvents: "none",
           }}
         />
 
         <div className="mx-auto max-w-6xl px-6 py-32 md:px-12 md:py-48">
-          {/* Eyebrow */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={inversionInView ? { opacity: 1, y: 0 } : {}}
@@ -497,15 +494,14 @@ export default function HowItWorksPage() {
               fontSize: "var(--text-eyebrow)",
               letterSpacing: "var(--tracking-eyebrow)",
               textTransform: "uppercase",
-              color: "rgba(246, 220, 159, 0.55)",
+              color: "rgba(242, 232, 213, 0.7)",
             }}
           >
-            <span style={{ color: "var(--color-accent)" }}>[Credo]</span>
+            <span style={{ color: "var(--color-ink)" }}>[Credo]</span>
             <span>—</span>
             <span>The Thesis</span>
           </motion.div>
 
-          {/* Stacked statement */}
           <h2
             style={{
               fontFamily: "var(--font-barlow)",
@@ -514,7 +510,7 @@ export default function HowItWorksPage() {
               lineHeight: "var(--leading-display)",
               letterSpacing: "var(--tracking-display)",
               textTransform: "uppercase",
-              color: "var(--color-canvas)",
+              color: "var(--color-accent-ink)",
             }}
           >
             <div style={{ overflow: "hidden" }}>
@@ -541,7 +537,7 @@ export default function HowItWorksPage() {
               </motion.div>
               <motion.span
                 style={{
-                  color: "var(--color-accent)",
+                  color: "var(--color-ink)",
                   display: "inline-block",
                 }}
                 initial={{ opacity: 0, scale: 0 }}
@@ -559,42 +555,26 @@ export default function HowItWorksPage() {
             </div>
           </h2>
 
-          {/* Attribution-style footer */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={inversionInView ? { opacity: 1 } : {}}
             transition={{ delay: 1.3, duration: 0.5 }}
             className="mt-16 flex items-center gap-4 border-t pt-6"
             style={{
-              borderColor: "rgba(246, 220, 159, 0.2)",
+              borderColor: "rgba(242, 232, 213, 0.3)",
               fontFamily: "var(--font-mono)",
               fontSize: "var(--text-eyebrow)",
               letterSpacing: "var(--tracking-eyebrow)",
               textTransform: "uppercase",
-              color: "rgba(246, 220, 159, 0.55)",
+              color: "rgba(242, 232, 213, 0.75)",
             }}
           >
             <span>—</span>
-            <span>MartialOps Method · No. 01</span>
-            <span style={{ color: "var(--color-accent)" }}>§</span>
+            <span>Fitore Method · No. 01</span>
+            <span style={{ color: "var(--color-ink)" }}>§</span>
           </motion.div>
         </div>
       </motion.section>
-
-      {/* ── Fin mark ──────────────────────────────────────── */}
-      <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-6 pb-24 pt-12 text-center md:px-12">
-        <div
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: "var(--text-eyebrow)",
-            letterSpacing: "var(--tracking-eyebrow)",
-            textTransform: "uppercase",
-            color: "var(--color-ink-faint)",
-          }}
-        >
-          <span>— fin —</span>
-        </div>
-      </div>
     </main>
   )
 }

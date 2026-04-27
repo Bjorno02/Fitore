@@ -32,7 +32,7 @@ export default function PrivacyPage() {
               color: "var(--color-ink-soft)",
             }}
           >
-            This policy is being drafted. MartialOps collects only the data
+            This policy is being drafted. Fitore collects only the data
             needed to run your training log — sign-in identity via Google, and
             the training sessions and check-ins you enter. We do not sell or
             share your data with third parties. For specifics, reach out at{" "}

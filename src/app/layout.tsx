@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Barlow_Condensed, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar"
-import Footer from "@/components/Footer"
+import ConditionalNavbar from "@/components/ConditionalNavbar"
+import ConditionalFooter from "@/components/ConditionalFooter"
 
 const barlow = Barlow_Condensed({
   variable: "--font-barlow",
@@ -17,7 +18,7 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "MartialOps",
+  title: "Fitore",
   description: "Combat sports gym operations platform",
 };
 
@@ -27,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* No-flash theme init — runs before React hydration */}
         <script src="/theme-init.js" />
@@ -35,9 +36,11 @@ export default function RootLayout({
       <body
         className={`${barlow.variable} ${jakarta.variable} antialiased`}
       >
-        <Navbar />
+        <ConditionalNavbar>
+          <Navbar />
+        </ConditionalNavbar>
         {children}
-        <Footer />
+        <ConditionalFooter />
       </body>
     </html>
   );

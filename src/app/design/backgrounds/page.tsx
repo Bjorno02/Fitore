@@ -90,7 +90,7 @@ export default function BackgroundLab() {
           color: "var(--color-ink)",
         }}
       >
-        <span>MartialOps · Background Lab</span>
+        <span>Fitore · Background Lab</span>
         <span style={{ opacity: 0.6 }}>Scroll · Pick a winner</span>
       </div>
 

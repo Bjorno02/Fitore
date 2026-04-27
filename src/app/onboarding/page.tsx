@@ -1,7 +1,8 @@
 "use client"
 
-import { motion } from "motion/react"
+import { motion, AnimatePresence } from "motion/react"
 import { useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { DoubleHeadedEagle, DotGrid } from "@/components/Ornaments"
 
@@ -18,6 +19,7 @@ export default function OnboardingPage() {
   const [results, setResults] = useState<Gym[]>([])
   const [searching, setSearching] = useState(false)
   const [requestedId, setRequestedId] = useState<string | null>(null)
+  const [requestedGym, setRequestedGym] = useState<Gym | null>(null)
   const [requestError, setRequestError] = useState<string | null>(null)
   const [searched, setSearched] = useState(false)
 
@@ -55,13 +57,20 @@ export default function OnboardingPage() {
     setRequestError(null)
     const res = await fetch(`/api/gyms/${gymId}/requests`, { method: "POST" })
     if (res.ok) {
-      router.push("/")
+      const gym = results.find((g) => g.id === gymId)
+      setRequestedGym(gym ?? { id: gymId, name: "Your gym" })
     } else {
       const data = await res.json().catch(() => ({}))
       setRequestError(data.error ?? "Something went wrong")
       setRequestedId(null)
     }
   }
+
+  const filedOn = new Date().toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  })
 
   return (
     <main className="relative min-h-screen overflow-hidden">
@@ -108,7 +117,7 @@ export default function OnboardingPage() {
           }}
         >
           <span>
-            MartialOps<span style={{ color: "var(--color-accent)" }}>.</span>
+            Fitore<span style={{ color: "var(--color-accent)" }}>.</span>
           </span>
           <span className="hidden md:inline">Gym Setup · One-Time</span>
           <span>Step 01 · Onboarding</span>
@@ -333,6 +342,16 @@ export default function OnboardingPage() {
             transition={{ delay: 1.45, duration: 0.6 }}
             className="flex flex-col"
           >
+            <AnimatePresence mode="wait" initial={false}>
+            {!requestedGym ? (
+            <motion.div
+              key="form"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="flex flex-col"
+            >
             <div
               className="mb-6 flex items-baseline justify-between border-b pb-4"
               style={{ borderColor: "var(--color-rule-strong)" }}
@@ -527,6 +546,145 @@ export default function OnboardingPage() {
                 — No gyms found —
               </p>
             ) : null}
+            </motion.div>
+            ) : (
+            <motion.div
+              key="receipt"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+              className="flex flex-col"
+            >
+              <div
+                className="mb-6 flex items-baseline justify-between border-b pb-4"
+                style={{ borderColor: "var(--color-accent)" }}
+              >
+                <div
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "var(--text-eyebrow)",
+                    letterSpacing: "var(--tracking-eyebrow)",
+                    textTransform: "uppercase",
+                    color: "var(--color-ink-muted)",
+                  }}
+                >
+                  <span style={{ color: "var(--color-accent)" }}>§ 02</span> Filed
+                </div>
+                <span
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "var(--text-eyebrow)",
+                    letterSpacing: "0.2em",
+                    textTransform: "uppercase",
+                    color: "var(--color-ink-faint)",
+                  }}
+                >
+                  Athlete
+                </span>
+              </div>
+
+              <h2
+                className="mb-6"
+                style={{
+                  fontFamily: "var(--font-barlow)",
+                  fontWeight: 800,
+                  fontSize: "var(--text-display-md)",
+                  lineHeight: "var(--leading-display)",
+                  letterSpacing: "var(--tracking-display)",
+                  textTransform: "uppercase",
+                  color: "var(--color-ink)",
+                }}
+              >
+                Request Filed<span style={{ color: "var(--color-accent)" }}>.</span>
+              </h2>
+
+              <div
+                className="mb-8 flex flex-wrap items-center gap-3 border-y py-3"
+                style={{
+                  borderColor: "var(--color-rule)",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "var(--text-eyebrow)",
+                  letterSpacing: "var(--tracking-eyebrow)",
+                  textTransform: "uppercase",
+                  color: "var(--color-ink-muted)",
+                }}
+              >
+                <span>Gym</span>
+                <span aria-hidden="true" style={{ color: "var(--color-accent)" }}>·</span>
+                <span style={{ color: "var(--color-ink)" }}>{requestedGym.name}</span>
+                <span aria-hidden="true" style={{ color: "var(--color-ink-faint)" }}>·</span>
+                <span>Filed {filedOn}</span>
+              </div>
+
+              <p
+                className="mb-8"
+                style={{
+                  fontFamily: "var(--font-sans)",
+                  fontSize: "16px",
+                  lineHeight: 1.7,
+                  color: "var(--color-ink-soft)",
+                }}
+              >
+                Your request has joined the queue. A coach will review and approve you —{" "}
+                <em
+                  style={{
+                    color: "var(--color-accent)",
+                    fontWeight: 600,
+                    fontStyle: "italic",
+                  }}
+                >
+                  typically within 24 hours
+                </em>
+                . You&apos;ll see the pending status on your profile until then.
+              </p>
+
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href="/profile"
+                  className="group flex items-center justify-between border px-6 py-4 transition-all hover:-translate-y-0.5"
+                  style={{
+                    backgroundColor: "var(--color-accent)",
+                    borderColor: "var(--color-accent-hover)",
+                    color: "var(--color-accent-ink)",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "var(--tracking-label)",
+                  }}
+                >
+                  <span>View Pending Status</span>
+                  <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">
+                    →
+                  </span>
+                </Link>
+                <Link
+                  href="/"
+                  className="group flex items-center justify-between border px-6 py-4 transition-all hover:-translate-y-0.5"
+                  style={{
+                    borderColor: "var(--color-ink)",
+                    color: "var(--color-ink)",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "var(--tracking-label)",
+                  }}
+                >
+                  <span>Back to Home</span>
+                  <span
+                    aria-hidden="true"
+                    className="transition-transform group-hover:translate-x-1"
+                    style={{ color: "var(--color-accent)" }}
+                  >
+                    →
+                  </span>
+                </Link>
+              </div>
+            </motion.div>
+            )}
+            </AnimatePresence>
           </motion.div>
         </div>
       </section>
