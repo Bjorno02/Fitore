@@ -5,6 +5,7 @@ import { requireGymMember } from "@/lib/auth-guards"
 import { Role } from "@/generated/prisma/enums"
 import prisma from "@/lib/prisma"
 import { DEFAULT_LOAD_CONFIG, DEFAULT_READINESS_CONFIG } from "@/lib/scoring"
+import { writeLimit, checkLimit, rateLimitResponse } from "@/lib/rate-limit"
 
 const settingsSchema = z.object({
   multiplierSparring: z.number().min(0).max(10),
@@ -69,6 +70,9 @@ export async function PUT(
   if (!session?.user?.id) {
     return Response.json({ error: "Unauthorized" }, { status: 401 })
   }
+
+  const limit = await checkLimit(writeLimit, session.user.id)
+  if (!limit.ok) return rateLimitResponse(limit.retryAfter)
 
   const { id: gymId } = await params
   const guard = await requireGymMember(session.user.id, gymId, Role.COACH)

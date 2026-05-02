@@ -4,6 +4,7 @@ import { auth } from "@/auth"
 import { requireGymMember } from "@/lib/auth-guards"
 import { Role } from "@/generated/prisma/enums"
 import prisma from "@/lib/prisma"
+import { approvalLimit, checkLimit, rateLimitResponse } from "@/lib/rate-limit"
 
 const patchSchema = z.object({
   action: z.enum(["approve", "deny"]),
@@ -17,6 +18,9 @@ export async function PATCH(
   if (!session?.user?.id) {
     return Response.json({ error: "Unauthorized" }, { status: 401 })
   }
+
+  const limit = await checkLimit(approvalLimit, session.user.id)
+  if (!limit.ok) return rateLimitResponse(limit.retryAfter)
 
   const { id: gymId, userId } = await params
   const guard = await requireGymMember(session.user.id, gymId, Role.ADMIN)

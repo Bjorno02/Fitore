@@ -88,9 +88,27 @@ GOOGLE_CLIENT_SECRET=""
 
 When deploying to Vercel, add these same variables in **Project Settings → Environment Variables** (Production + Preview). `NEXTAUTH_URL` becomes your deployed URL.
 
-Future additions (not required yet):
-- `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` — when Sentry is wired up
-- `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` — when rate limiting is wired up
+### Optional — only set these to enable the feature
+
+Rate limiting (Upstash Redis):
+
+```env
+UPSTASH_REDIS_REST_URL=""
+UPSTASH_REDIS_REST_TOKEN=""
+```
+
+If both are set, sliding-window rate limits are enforced on write/search/join/approval endpoints. If unset, limits are no-op (helpful for local dev). Sign up at [upstash.com](https://upstash.com) → create a Redis database → copy the REST URL + token.
+
+Error monitoring (Sentry):
+
+```env
+NEXT_PUBLIC_SENTRY_DSN=""
+SENTRY_AUTH_TOKEN=""
+SENTRY_ORG=""
+SENTRY_PROJECT=""
+```
+
+Run `npx @sentry/wizard@latest -i nextjs` once and the wizard will create the config files and prompt for these values.
 
 ---
 

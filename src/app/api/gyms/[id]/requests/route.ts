@@ -3,12 +3,16 @@ import { auth } from "@/auth"
 import { requireGymMember } from "@/lib/auth-guards"
 import { Role } from "@/generated/prisma/enums"
 import prisma from "@/lib/prisma"
+import { joinRequestLimit, checkLimit, rateLimitResponse } from "@/lib/rate-limit"
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session?.user?.id) {
     return Response.json({ error: "Unauthorized" }, { status: 401 })
   }
+
+  const limit = await checkLimit(joinRequestLimit, session.user.id)
+  if (!limit.ok) return rateLimitResponse(limit.retryAfter)
 
   const { id: gymId } = await params
 

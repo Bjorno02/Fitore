@@ -2,6 +2,12 @@ import { NextRequest } from "next/server"
 import { z } from "zod"
 import { auth } from "@/auth"
 import prisma from "@/lib/prisma"
+import {
+  createGymLimit,
+  searchLimit,
+  checkLimit,
+  rateLimitResponse,
+} from "@/lib/rate-limit"
 
 const createGymSchema = z.object({
   name: z.string().min(1),
@@ -12,6 +18,9 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.id) {
     return Response.json({ error: "Unauthorized" }, { status: 401 })
   }
+
+  const limit = await checkLimit(createGymLimit, session.user.id)
+  if (!limit.ok) return rateLimitResponse(limit.retryAfter)
 
   const body = await req.json()
   const result = createGymSchema.safeParse(body)
@@ -40,6 +49,9 @@ export async function GET(req: NextRequest) {
   if (!session?.user?.id) {
     return Response.json({ error: "Unauthorized" }, { status: 401 })
   }
+
+  const limit = await checkLimit(searchLimit, session.user.id)
+  if (!limit.ok) return rateLimitResponse(limit.retryAfter)
 
   const search = req.nextUrl.searchParams.get("search") ?? ""
 
