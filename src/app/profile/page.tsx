@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import prisma from "@/lib/prisma"
 import { DoubleHeadedEagle, DotGrid } from "@/components/Ornaments"
+import LeaveGymButton from "./LeaveGymButton"
 
 export default async function ProfilePage() {
   const session = await auth()
@@ -160,6 +161,8 @@ export default async function ProfilePage() {
             </span>
           </Link>
         </div>
+
+        <LeaveGymButton gymId={membership.gymId} gymName={membership.gym.name} />
       </section>
     </main>
   )

@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma"
 import PageHeader from "@/components/PageHeader"
 import CalendarPanel from "./CalendarPanel"
 import InviteCodesPanel from "./InviteCodesPanel"
+import MembersPanel from "./MembersPanel"
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -167,6 +168,12 @@ export default async function DashboardPage() {
         </section>
 
         <InviteCodesPanel gymId={membership.gymId} />
+
+        <MembersPanel
+          gymId={membership.gymId}
+          currentUserId={session.user.id}
+          currentUserRole={membership.role}
+        />
 
         <CalendarPanel
           gymId={membership.gymId}

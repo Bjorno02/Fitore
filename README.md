@@ -215,6 +215,9 @@ MartialOps/
 │   │       ├── invite-codes/route.ts             # POST generate, GET list (coach/admin)
 │   │       ├── invite-codes/[id]/route.ts        # DELETE revoke (coach/admin)
 │   │       ├── invite-codes/redeem/route.ts      # POST redeem code (athlete)
+│   │       ├── gyms/[id]/members/route.ts        # GET roster (coach/admin)
+│   │       ├── gyms/[id]/members/[userId]/route.ts  # DELETE remove member (coach/admin)
+│   │       ├── memberships/me/route.ts           # DELETE leave gym (any member)
 │   │       └── dashboard/
 │   │           ├── day/route.ts           # single day's sessions + check-in
 │   │           └── summary/route.ts       # monthly summary for calendar heatmap
