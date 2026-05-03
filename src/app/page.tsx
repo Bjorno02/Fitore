@@ -4,28 +4,17 @@ import prisma from "@/lib/prisma"
 import Link from "next/link"
 import HomeHero from "./HomeHero"
 import HomeCards from "./HomeCards"
-import HomePending from "./HomePending"
 
 export default async function Home() {
   const session = await auth()
   if (!session?.user?.id) redirect("/login")
 
   const membership = await prisma.membership.findFirst({
-    where: { userId: session.user.id },
+    where: { userId: session.user.id, status: "ACTIVE" },
     include: { gym: true },
   })
 
   if (!membership) redirect("/onboarding")
-
-  if (membership.status === "PENDING") {
-    return (
-      <HomePending
-        gymName={membership.gym.name}
-        userName={session.user.name}
-        role={membership.role}
-      />
-    )
-  }
 
   const isCoach =
     membership.role === "COACH" || membership.role === "ADMIN"

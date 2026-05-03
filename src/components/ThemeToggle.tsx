@@ -64,6 +64,7 @@ export default function ThemeToggle() {
 
   useEffect(() => {
     const current = document.documentElement.getAttribute("data-theme")
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTheme(current === "cool" ? "cool" : "warm")
     setMounted(true)
   }, [])

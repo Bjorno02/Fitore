@@ -6,7 +6,7 @@ Two numbers:
 - **Readiness** — a 1–100 daily score derived from sleep, soreness, stress, and injury status.
 - **Training Load** — per-session load from duration × intensity × session-type multiplier (configurable per gym).
 
-Athletes log sessions and daily check-ins; coaches see gym-wide load and readiness and approve new members.
+Athletes log sessions and daily check-ins; coaches see gym-wide load and readiness. Athletes join via coach-generated invite codes — no public search, no approval queue.
 
 ---
 
@@ -194,9 +194,8 @@ MartialOps/
 │   │   ├── page.tsx               # home (role-aware; renders HomeHero/Cards or HomePending)
 │   │   ├── HomeHero.tsx           # hero for active members
 │   │   ├── HomeCards.tsx          # action cards (athlete/coach)
-│   │   ├── HomePending.tsx        # styled "awaiting approval" state
 │   │   ├── login/                 # /login (Google OAuth)
-│   │   ├── onboarding/            # /onboarding — create gym OR search + request join
+│   │   ├── onboarding/            # /onboarding — create a gym OR redeem an invite code
 │   │   ├── profile/               # /profile — identity record + pending-access card
 │   │   ├── athlete/               # /athlete — training log form
 │   │   │   └── history/           # /athlete/history — lifetime stats + activity log
@@ -211,10 +210,11 @@ MartialOps/
 │   │       ├── auth/[...nextauth]/route.ts
 │   │       ├── sessions/route.ts          # POST/GET training sessions
 │   │       ├── checkins/route.ts          # POST/GET daily check-ins
-│   │       ├── gyms/route.ts              # POST create, GET search
-│   │       ├── gyms/[id]/settings/route.ts       # GET/PATCH gym multipliers
-│   │       ├── gyms/[id]/requests/route.ts       # POST membership request
-│   │       ├── gyms/[id]/requests/[userId]/route.ts  # POST/PATCH approve/reject
+│   │       ├── gyms/route.ts              # POST create gym
+│   │       ├── gyms/[id]/settings/route.ts       # GET/PUT gym multipliers
+│   │       ├── invite-codes/route.ts             # POST generate, GET list (coach/admin)
+│   │       ├── invite-codes/[id]/route.ts        # DELETE revoke (coach/admin)
+│   │       ├── invite-codes/redeem/route.ts      # POST redeem code (athlete)
 │   │       └── dashboard/
 │   │           ├── day/route.ts           # single day's sessions + check-in
 │   │           └── summary/route.ts       # monthly summary for calendar heatmap

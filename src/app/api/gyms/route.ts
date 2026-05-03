@@ -2,12 +2,7 @@ import { NextRequest } from "next/server"
 import { z } from "zod"
 import { auth } from "@/auth"
 import prisma from "@/lib/prisma"
-import {
-  createGymLimit,
-  searchLimit,
-  checkLimit,
-  rateLimitResponse,
-} from "@/lib/rate-limit"
+import { createGymLimit, checkLimit, rateLimitResponse } from "@/lib/rate-limit"
 
 const createGymSchema = z.object({
   name: z.string().min(1),
@@ -42,24 +37,4 @@ export async function POST(req: NextRequest) {
   })
 
   return Response.json(gym, { status: 201 })
-}
-
-export async function GET(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
-  const limit = await checkLimit(searchLimit, session.user.id)
-  if (!limit.ok) return rateLimitResponse(limit.retryAfter)
-
-  const search = req.nextUrl.searchParams.get("search") ?? ""
-
-  const gyms = await prisma.gym.findMany({
-    where: search ? { name: { contains: search, mode: "insensitive" } } : undefined,
-    select: { id: true, name: true },
-    take: 20,
-  })
-
-  return Response.json(gyms)
 }

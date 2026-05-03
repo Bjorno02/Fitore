@@ -24,9 +24,8 @@ function makeLimiter(
 
 export const writeLimit = makeLimiter("write", 20, "60 s")
 export const searchLimit = makeLimiter("search", 30, "60 s")
-export const approvalLimit = makeLimiter("approval", 30, "60 s")
-export const joinRequestLimit = makeLimiter("join", 5, "1 h")
 export const createGymLimit = makeLimiter("create-gym", 3, "1 h")
+export const redeemLimit = makeLimiter("redeem", 10, "1 h")
 
 type LimitOk = { ok: true }
 type LimitFail = { ok: false; retryAfter: number }

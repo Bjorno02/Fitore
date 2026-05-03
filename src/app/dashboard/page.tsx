@@ -2,9 +2,9 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import { auth } from "@/auth"
 import prisma from "@/lib/prisma"
-import PendingRequests from "./PendingRequests"
 import PageHeader from "@/components/PageHeader"
 import CalendarPanel from "./CalendarPanel"
+import InviteCodesPanel from "./InviteCodesPanel"
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -37,15 +37,6 @@ export default async function DashboardPage() {
     )
   }
 
-  const pendingRequests =
-    membership.role === "ADMIN"
-      ? await prisma.membership.findMany({
-          where: { gymId: membership.gymId, status: "PENDING" },
-          include: { user: { select: { id: true, name: true, email: true } } },
-        })
-      : []
-
-  // Month summary for calendar — group check-in counts by date (UTC)
   const now = new Date()
   const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
   const monthEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1))
@@ -93,12 +84,11 @@ export default async function DashboardPage() {
             >
               <span style={{ color: "var(--color-accent)" }}>§ 01</span> Gym Overview
             </div>
-            <div className="grid grid-cols-3 gap-8">
+            <div className="grid grid-cols-2 gap-8">
               {[
                 { value: sessionCount, label: "Sessions" },
                 { value: checkinCount, label: "Check-ins" },
-                { value: pendingRequests.length, label: "Pending" },
-              ].map((stat, i) => (
+              ].map((stat) => (
                 <div key={stat.label} className="flex flex-col">
                   <span
                     style={{
@@ -107,10 +97,7 @@ export default async function DashboardPage() {
                       fontSize: "var(--text-display-md)",
                       lineHeight: 1,
                       letterSpacing: "var(--tracking-display)",
-                      color:
-                        i === 2 && stat.value > 0
-                          ? "var(--color-accent)"
-                          : "var(--color-ink)",
+                      color: "var(--color-ink)",
                     }}
                   >
                     {stat.value}
@@ -179,12 +166,8 @@ export default async function DashboardPage() {
           </Link>
         </section>
 
-        {/* Pending requests */}
-        {pendingRequests.length > 0 && (
-          <PendingRequests requests={pendingRequests} />
-        )}
+        <InviteCodesPanel gymId={membership.gymId} />
 
-        {/* Calendar + day panel */}
         <CalendarPanel
           gymId={membership.gymId}
           initialMonthSummary={monthSummary}

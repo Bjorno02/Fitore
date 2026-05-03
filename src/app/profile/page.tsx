@@ -14,12 +14,6 @@ export default async function ProfilePage() {
   })
   if (!membership) redirect("/onboarding")
 
-  const isPending = membership.status === "PENDING"
-  const filedOn = new Date().toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  })
   const fileNo = membership.id.slice(-6).toUpperCase()
 
   return (
@@ -107,121 +101,6 @@ export default async function ProfilePage() {
         </h1>
       </section>
 
-      {isPending && (
-        <section className="mx-auto max-w-6xl px-6 pb-16 md:px-12">
-          <div
-            className="border p-8 md:p-10"
-            style={{
-              backgroundColor: "var(--color-canvas-raised)",
-              borderColor: "var(--color-rule-strong)",
-              boxShadow: "var(--shadow-md)",
-            }}
-          >
-            <div
-              className="mb-6 flex items-baseline justify-between border-b pb-3"
-              style={{ borderColor: "var(--color-rule-strong)" }}
-            >
-              <span
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "var(--text-eyebrow)",
-                  letterSpacing: "var(--tracking-eyebrow)",
-                  textTransform: "uppercase",
-                  color: "var(--color-ink-muted)",
-                }}
-              >
-                <span style={{ color: "var(--color-accent)" }}>§</span> Pending
-                Access
-              </span>
-              <span
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "var(--text-eyebrow)",
-                  letterSpacing: "0.2em",
-                  textTransform: "uppercase",
-                  color: "var(--color-ink-faint)",
-                }}
-              >
-                Filed · {filedOn}
-              </span>
-            </div>
-
-            <h2
-              className="mb-5"
-              style={{
-                fontFamily: "var(--font-barlow)",
-                fontWeight: 800,
-                fontSize: "var(--text-display-md)",
-                lineHeight: "var(--leading-display)",
-                letterSpacing: "var(--tracking-display)",
-                textTransform: "uppercase",
-                color: "var(--color-ink)",
-              }}
-            >
-              {membership.gym.name}
-              <span style={{ color: "var(--color-accent)" }}>.</span>
-            </h2>
-
-            <p
-              className="max-w-2xl"
-              style={{
-                fontFamily: "var(--font-sans)",
-                fontSize: "17px",
-                lineHeight: 1.7,
-                color: "var(--color-ink-soft)",
-              }}
-            >
-              Your request has joined the queue. A coach will review and
-              approve you —{" "}
-              <em
-                style={{
-                  color: "var(--color-accent)",
-                  fontStyle: "italic",
-                  fontWeight: 600,
-                }}
-              >
-                typically within 24 hours.
-              </em>{" "}
-              Until then, logging and dashboard access are held.
-            </p>
-
-            <div
-              className="mt-8 flex items-center gap-6 border-t pt-5"
-              style={{ borderColor: "var(--color-rule)" }}
-            >
-              <span
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "11px",
-                  letterSpacing: "var(--tracking-label)",
-                  textTransform: "uppercase",
-                  color: "var(--color-ink-muted)",
-                }}
-              >
-                Status · <span style={{ color: "var(--color-accent)" }}>Awaiting Coach</span>
-              </span>
-              <span
-                aria-hidden="true"
-                style={{ color: "var(--color-ink-faint)" }}
-              >
-                ·
-              </span>
-              <span
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "11px",
-                  letterSpacing: "var(--tracking-label)",
-                  textTransform: "uppercase",
-                  color: "var(--color-ink-muted)",
-                }}
-              >
-                Role · {membership.role}
-              </span>
-            </div>
-          </div>
-        </section>
-      )}
-
       <section className="mx-auto max-w-6xl px-6 pb-24 md:px-12">
         <div
           className="mb-6 flex items-baseline justify-between border-b pb-3"
@@ -254,11 +133,7 @@ export default async function ProfilePage() {
         <dl className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <Field label="Name" value={session.user.name ?? "—"} />
           <Field label="Email" value={session.user.email ?? "—"} />
-          <Field
-            label="Gym"
-            value={membership.gym.name}
-            accent={isPending ? "pending" : null}
-          />
+          <Field label="Gym" value={membership.gym.name} />
         </dl>
 
         <div className="mt-12 flex flex-wrap gap-4">
@@ -290,15 +165,7 @@ export default async function ProfilePage() {
   )
 }
 
-function Field({
-  label,
-  value,
-  accent,
-}: {
-  label: string
-  value: string
-  accent?: "pending" | null
-}) {
+function Field({ label, value }: { label: string; value: string }) {
   return (
     <div
       className="border-t pt-4"
@@ -316,7 +183,7 @@ function Field({
         {label}
       </dt>
       <dd
-        className="mt-2 flex items-baseline gap-2"
+        className="mt-2"
         style={{
           fontFamily: "var(--font-sans)",
           fontSize: "18px",
@@ -324,20 +191,7 @@ function Field({
           color: "var(--color-ink)",
         }}
       >
-        <span>{value}</span>
-        {accent === "pending" && (
-          <span
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "10px",
-              letterSpacing: "var(--tracking-label)",
-              textTransform: "uppercase",
-              color: "var(--color-accent)",
-            }}
-          >
-            · Pending
-          </span>
-        )}
+        {value}
       </dd>
     </div>
   )

@@ -1,12 +1,17 @@
 "use client"
 
-import { motion, AnimatePresence } from "motion/react"
+import { motion } from "motion/react"
 import { useState } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { DoubleHeadedEagle, DotGrid } from "@/components/Ornaments"
 
-type Gym = { id: string; name: string }
+const REDEEM_ERRORS: Record<string, string> = {
+  invalid_code: "We don't recognize that code.",
+  expired: "That code has expired.",
+  exhausted: "That code is fully used.",
+  revoked: "That code was revoked.",
+  already_member: "You're already in this gym.",
+}
 
 export default function OnboardingPage() {
   const router = useRouter()
@@ -15,13 +20,9 @@ export default function OnboardingPage() {
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
 
-  const [search, setSearch] = useState("")
-  const [results, setResults] = useState<Gym[]>([])
-  const [searching, setSearching] = useState(false)
-  const [requestedId, setRequestedId] = useState<string | null>(null)
-  const [requestedGym, setRequestedGym] = useState<Gym | null>(null)
-  const [requestError, setRequestError] = useState<string | null>(null)
-  const [searched, setSearched] = useState(false)
+  const [code, setCode] = useState("")
+  const [redeeming, setRedeeming] = useState(false)
+  const [redeemError, setRedeemError] = useState<string | null>(null)
 
   async function handleCreate(e: React.SyntheticEvent) {
     e.preventDefault()
@@ -41,40 +42,27 @@ export default function OnboardingPage() {
     }
   }
 
-  async function handleSearch(e: React.SyntheticEvent) {
+  async function handleRedeem(e: React.SyntheticEvent) {
     e.preventDefault()
-    setSearching(true)
-    setSearched(false)
-    const res = await fetch(`/api/gyms?search=${encodeURIComponent(search)}`)
-    const data = await res.json().catch(() => [])
-    setResults(data)
-    setSearching(false)
-    setSearched(true)
-  }
-
-  async function handleRequest(gymId: string) {
-    setRequestedId(gymId)
-    setRequestError(null)
-    const res = await fetch(`/api/gyms/${gymId}/requests`, { method: "POST" })
+    setRedeeming(true)
+    setRedeemError(null)
+    const res = await fetch("/api/invite-codes/redeem", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: code.trim() }),
+    })
     if (res.ok) {
-      const gym = results.find((g) => g.id === gymId)
-      setRequestedGym(gym ?? { id: gymId, name: "Your gym" })
+      router.push("/")
     } else {
       const data = await res.json().catch(() => ({}))
-      setRequestError(data.error ?? "Something went wrong")
-      setRequestedId(null)
+      const key = typeof data?.error === "string" ? data.error : ""
+      setRedeemError(REDEEM_ERRORS[key] ?? "Couldn't redeem that code.")
+      setRedeeming(false)
     }
   }
 
-  const filedOn = new Date().toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  })
-
   return (
     <main className="relative min-h-screen overflow-hidden">
-      {/* Faint eagle backdrop */}
       <div
         className="pointer-events-none absolute hidden lg:block"
         style={{
@@ -87,7 +75,6 @@ export default function OnboardingPage() {
         <DoubleHeadedEagle size={260} color="var(--color-ink)" />
       </div>
 
-      {/* Faint dot texture */}
       <DotGrid
         cols={16}
         rows={7}
@@ -103,7 +90,6 @@ export default function OnboardingPage() {
         }}
       />
 
-      {/* ── Masthead strip ──────────────────────────────────── */}
       <div className="mx-auto max-w-6xl px-6 md:px-12">
         <div
           className="flex flex-wrap items-center justify-between gap-3 border-b py-4"
@@ -124,7 +110,6 @@ export default function OnboardingPage() {
         </div>
       </div>
 
-      {/* ── Hero ────────────────────────────────────────────── */}
       <section className="mx-auto max-w-6xl px-6 pb-16 pt-20 md:px-12 md:pt-28">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -203,10 +188,8 @@ export default function OnboardingPage() {
         </h1>
       </section>
 
-      {/* ── Two modules ─────────────────────────────────────── */}
       <section className="mx-auto max-w-6xl px-6 pb-24 md:px-12">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2 md:gap-16">
-          {/* ── § 01 Create ─────────────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -265,7 +248,7 @@ export default function OnboardingPage() {
                 color: "var(--color-ink-soft)",
               }}
             >
-              You&apos;ll be the first coach. Invite athletes and coaches from your dashboard.
+              You&apos;ll be the first coach. Generate invite codes from the dashboard to add athletes.
             </p>
 
             <form onSubmit={handleCreate} className="flex flex-col gap-5">
@@ -335,23 +318,12 @@ export default function OnboardingPage() {
             </form>
           </motion.div>
 
-          {/* ── § 02 Find ─────────────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.45, duration: 0.6 }}
             className="flex flex-col"
           >
-            <AnimatePresence mode="wait" initial={false}>
-            {!requestedGym ? (
-            <motion.div
-              key="form"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col"
-            >
             <div
               className="mb-6 flex items-baseline justify-between border-b pb-4"
               style={{ borderColor: "var(--color-rule-strong)" }}
@@ -365,7 +337,7 @@ export default function OnboardingPage() {
                   color: "var(--color-ink-muted)",
                 }}
               >
-                <span style={{ color: "var(--color-accent)" }}>§ 02</span> Join
+                <span style={{ color: "var(--color-accent)" }}>§ 02</span> Redeem
               </div>
               <span
                 style={{
@@ -392,7 +364,7 @@ export default function OnboardingPage() {
                 color: "var(--color-ink)",
               }}
             >
-              Find Your Gym
+              Enter Invite Code
             </h2>
 
             <p
@@ -404,13 +376,13 @@ export default function OnboardingPage() {
                 color: "var(--color-ink-soft)",
               }}
             >
-              Search, request to join, and wait for a coach to approve you. That&apos;s it.
+              Your coach will give you a code. Type it in and you&apos;re in — no waiting.
             </p>
 
-            <form onSubmit={handleSearch} className="flex flex-col gap-5">
+            <form onSubmit={handleRedeem} className="flex flex-col gap-5">
               <div className="flex flex-col gap-2">
                 <label
-                  htmlFor="gym-search"
+                  htmlFor="invite-code"
                   style={{
                     fontFamily: "var(--font-mono)",
                     fontSize: "var(--text-eyebrow)",
@@ -419,28 +391,46 @@ export default function OnboardingPage() {
                     color: "var(--color-ink-muted)",
                   }}
                 >
-                  Search Gyms
+                  Invite Code
                 </label>
                 <input
-                  id="gym-search"
+                  id="invite-code"
                   type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Gym name…"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder="xxxx-xxxx"
+                  autoComplete="off"
+                  spellCheck={false}
+                  autoCapitalize="off"
                   className="border-b bg-transparent py-3 outline-none transition-colors focus:border-[var(--color-accent)]"
                   style={{
                     borderColor: "var(--color-rule-strong)",
                     color: "var(--color-ink)",
-                    fontFamily: "var(--font-sans)",
-                    fontSize: "18px",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "20px",
+                    letterSpacing: "0.08em",
                   }}
                 />
               </div>
 
+              {redeemError && (
+                <p
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "12px",
+                    letterSpacing: "0.12em",
+                    color: "#b91c1c",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  ✗ {redeemError}
+                </p>
+              )}
+
               <button
                 type="submit"
-                disabled={searching}
-                className="group flex items-center justify-between border px-6 py-4 transition-all hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
+                disabled={redeeming || !code.trim()}
+                className="group mt-2 flex items-center justify-between border px-6 py-4 transition-all hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
                 style={{
                   backgroundColor: "transparent",
                   borderColor: "var(--color-ink)",
@@ -452,7 +442,7 @@ export default function OnboardingPage() {
                   letterSpacing: "var(--tracking-label)",
                 }}
               >
-                <span>{searching ? "Searching…" : "Search"}</span>
+                <span>{redeeming ? "Redeeming…" : "Join"}</span>
                 <span
                   aria-hidden="true"
                   className="transition-transform group-hover:translate-x-1"
@@ -462,229 +452,6 @@ export default function OnboardingPage() {
                 </span>
               </button>
             </form>
-
-            {requestError && (
-              <p
-                className="mt-4"
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "12px",
-                  letterSpacing: "0.12em",
-                  color: "#b91c1c",
-                  textTransform: "uppercase",
-                }}
-              >
-                ✗ {requestError}
-              </p>
-            )}
-
-            {/* Results */}
-            {results.length > 0 ? (
-              <div
-                className="mt-8 border-t"
-                style={{ borderColor: "var(--color-rule-strong)" }}
-              >
-                {results.map((gym, i) => (
-                  <div
-                    key={gym.id}
-                    className="flex items-center justify-between border-b py-4"
-                    style={{
-                      borderColor: "var(--color-rule)",
-                      borderBottomWidth: i === results.length - 1 ? "0" : "1px",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontFamily: "var(--font-sans)",
-                        fontWeight: 600,
-                        fontSize: "16px",
-                        color: "var(--color-ink)",
-                      }}
-                    >
-                      {gym.name}
-                    </span>
-                    <button
-                      onClick={() => handleRequest(gym.id)}
-                      disabled={requestedId !== null}
-                      className="border px-4 py-2 transition-all hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
-                      style={{
-                        backgroundColor:
-                          requestedId === gym.id
-                            ? "var(--color-accent)"
-                            : "transparent",
-                        borderColor:
-                          requestedId === gym.id
-                            ? "var(--color-accent-hover)"
-                            : "var(--color-ink)",
-                        color:
-                          requestedId === gym.id
-                            ? "var(--color-accent-ink)"
-                            : "var(--color-ink)",
-                        fontFamily: "var(--font-mono)",
-                        fontSize: "11px",
-                        fontWeight: 700,
-                        textTransform: "uppercase",
-                        letterSpacing: "var(--tracking-label)",
-                      }}
-                    >
-                      {requestedId === gym.id ? "Requesting…" : "Request"}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : searched && !searching ? (
-              <p
-                className="mt-8 text-center"
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "12px",
-                  letterSpacing: "var(--tracking-label)",
-                  textTransform: "uppercase",
-                  color: "var(--color-ink-muted)",
-                }}
-              >
-                — No gyms found —
-              </p>
-            ) : null}
-            </motion.div>
-            ) : (
-            <motion.div
-              key="receipt"
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col"
-            >
-              <div
-                className="mb-6 flex items-baseline justify-between border-b pb-4"
-                style={{ borderColor: "var(--color-accent)" }}
-              >
-                <div
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "var(--text-eyebrow)",
-                    letterSpacing: "var(--tracking-eyebrow)",
-                    textTransform: "uppercase",
-                    color: "var(--color-ink-muted)",
-                  }}
-                >
-                  <span style={{ color: "var(--color-accent)" }}>§ 02</span> Filed
-                </div>
-                <span
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "var(--text-eyebrow)",
-                    letterSpacing: "0.2em",
-                    textTransform: "uppercase",
-                    color: "var(--color-ink-faint)",
-                  }}
-                >
-                  Athlete
-                </span>
-              </div>
-
-              <h2
-                className="mb-6"
-                style={{
-                  fontFamily: "var(--font-barlow)",
-                  fontWeight: 800,
-                  fontSize: "var(--text-display-md)",
-                  lineHeight: "var(--leading-display)",
-                  letterSpacing: "var(--tracking-display)",
-                  textTransform: "uppercase",
-                  color: "var(--color-ink)",
-                }}
-              >
-                Request Filed<span style={{ color: "var(--color-accent)" }}>.</span>
-              </h2>
-
-              <div
-                className="mb-8 flex flex-wrap items-center gap-3 border-y py-3"
-                style={{
-                  borderColor: "var(--color-rule)",
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "var(--text-eyebrow)",
-                  letterSpacing: "var(--tracking-eyebrow)",
-                  textTransform: "uppercase",
-                  color: "var(--color-ink-muted)",
-                }}
-              >
-                <span>Gym</span>
-                <span aria-hidden="true" style={{ color: "var(--color-accent)" }}>·</span>
-                <span style={{ color: "var(--color-ink)" }}>{requestedGym.name}</span>
-                <span aria-hidden="true" style={{ color: "var(--color-ink-faint)" }}>·</span>
-                <span>Filed {filedOn}</span>
-              </div>
-
-              <p
-                className="mb-8"
-                style={{
-                  fontFamily: "var(--font-sans)",
-                  fontSize: "16px",
-                  lineHeight: 1.7,
-                  color: "var(--color-ink-soft)",
-                }}
-              >
-                Your request has joined the queue. A coach will review and approve you —{" "}
-                <em
-                  style={{
-                    color: "var(--color-accent)",
-                    fontWeight: 600,
-                    fontStyle: "italic",
-                  }}
-                >
-                  typically within 24 hours
-                </em>
-                . You&apos;ll see the pending status on your profile until then.
-              </p>
-
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/profile"
-                  className="group flex items-center justify-between border px-6 py-4 transition-all hover:-translate-y-0.5"
-                  style={{
-                    backgroundColor: "var(--color-accent)",
-                    borderColor: "var(--color-accent-hover)",
-                    color: "var(--color-accent-ink)",
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "12px",
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: "var(--tracking-label)",
-                  }}
-                >
-                  <span>View Pending Status</span>
-                  <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">
-                    →
-                  </span>
-                </Link>
-                <Link
-                  href="/"
-                  className="group flex items-center justify-between border px-6 py-4 transition-all hover:-translate-y-0.5"
-                  style={{
-                    borderColor: "var(--color-ink)",
-                    color: "var(--color-ink)",
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "12px",
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: "var(--tracking-label)",
-                  }}
-                >
-                  <span>Back to Home</span>
-                  <span
-                    aria-hidden="true"
-                    className="transition-transform group-hover:translate-x-1"
-                    style={{ color: "var(--color-accent)" }}
-                  >
-                    →
-                  </span>
-                </Link>
-              </div>
-            </motion.div>
-            )}
-            </AnimatePresence>
           </motion.div>
         </div>
       </section>

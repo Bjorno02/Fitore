@@ -34,7 +34,7 @@ export function calcLoad(
   type: string,
   config: LoadConfig = DEFAULT_LOAD_CONFIG
 ): number {
-  let multiplier = config.typeMultipliers[type] ?? config.defaultMultiplier
+  const multiplier = config.typeMultipliers[type] ?? config.defaultMultiplier
 
   return duration * intensity * multiplier
 }
