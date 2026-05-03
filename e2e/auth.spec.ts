@@ -2,12 +2,12 @@ import { test, expect } from "@playwright/test"
 
 test("unauthenticated user is redirected to sign in", async ({ page }) => {
   await page.goto("/dashboard")
-  await expect(page).toHaveURL(/api\/auth\/signin/)
+  await expect(page).toHaveURL(/\/login/)
 })
 
 test("unauthenticated user cannot access athlete page", async ({ page }) => {
   await page.goto("/athlete")
-  await expect(page).toHaveURL(/api\/auth\/signin/)
+  await expect(page).toHaveURL(/\/login/)
 })
 
 test("API returns 401 without session", async ({ request }) => {
@@ -19,5 +19,5 @@ test("API returns 401 without session", async ({ request }) => {
 
 test("unauthenticated user cannot access athlete history page", async ({ page }) => {
   await page.goto("/athlete/history")
-  await expect(page).toHaveURL(/api\/auth\/signin/)
+  await expect(page).toHaveURL(/\/login/)
 })
