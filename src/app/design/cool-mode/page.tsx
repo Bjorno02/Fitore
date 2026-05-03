@@ -400,7 +400,7 @@ export default function CoolModeLab() {
           color: "var(--color-ink)",
         }}
       >
-        <span>MartialOps · Cool Mode Lab</span>
+        <span>Fitore · Cool Mode Lab</span>
         <span style={{ opacity: 0.6 }}>Scroll · Pick a winner</span>
       </div>
 

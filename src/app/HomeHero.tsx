@@ -169,7 +169,9 @@ export default function HomeHero({ gymName, userName }: Props) {
         >
           Pick up where you left off. Log a session, check in for the day, or step
           into the coach dashboard.{" "}
-          <em style={{ color: "var(--color-ink)" }}>Two numbers, no noise.</em>
+          <em style={{ color: "var(--color-accent)", fontWeight: 600, fontStyle: "italic" }}>
+            Two numbers, no noise.
+          </em>
         </motion.p>
       </div>
     </section>

@@ -98,7 +98,7 @@ function ActionCard({
             {desc}
           </p>
 
-          {/* Footer: Enter + arrow — gradient button style */}
+          {/* Footer: Enter + filled accent arrow button */}
           <div
             className="mt-auto flex items-center justify-between border-t pt-4"
             style={{ borderColor: "var(--color-rule-strong)" }}
@@ -106,20 +106,26 @@ function ActionCard({
             <span
               style={{
                 fontFamily: "var(--font-mono)",
-                fontSize: "var(--text-eyebrow)",
+                fontSize: "13px",
+                fontWeight: 700,
                 letterSpacing: "var(--tracking-eyebrow)",
                 textTransform: "uppercase",
-                color: "var(--color-ink-muted)",
+                color: "var(--color-ink)",
               }}
             >
               Enter
             </span>
             <span
               aria-hidden="true"
-              className="transition-transform group-hover:translate-x-1"
+              className="inline-flex items-center justify-center transition-transform group-hover:translate-x-1"
               style={{
-                color: "var(--color-accent)",
+                width: "40px",
+                height: "40px",
+                backgroundColor: "var(--color-accent)",
+                color: "var(--color-accent-ink)",
                 fontSize: "20px",
+                fontWeight: 800,
+                boxShadow: "var(--shadow-accent-md)",
               }}
             >
               →

@@ -33,7 +33,7 @@ export default function TermsPage() {
             }}
           >
             This policy is being drafted. For questions about the terms that
-            govern your use of MartialOps in the meantime, reach out at{" "}
+            govern your use of Fitore in the meantime, reach out at{" "}
             <a
               href="mailto:bshurd42@gmail.com"
               style={{

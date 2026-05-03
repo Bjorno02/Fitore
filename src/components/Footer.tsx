@@ -96,7 +96,7 @@ export default function Footer() {
                 lineHeight: 1,
               }}
             >
-              MartialOps
+              Fitore
               <span style={{ color: "var(--color-accent-bright)" }}>.</span>
             </span>
           </Link>
@@ -136,9 +136,29 @@ export default function Footer() {
           <span aria-hidden="true" style={{ color: "rgba(246,220,159,0.25)" }}>
             ·
           </span>
-          <FooterLink href={`mailto:${CONTACT_EMAIL}`} external>
-            Email
-          </FooterLink>
+          <a
+            href={`mailto:${CONTACT_EMAIL}`}
+            className="group inline-flex items-center gap-2 transition-all hover:brightness-110"
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "12px",
+              fontWeight: 700,
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              color: "var(--color-accent-bright)",
+              textDecoration: "none",
+              borderBottom: "1px solid var(--color-accent-bright)",
+              paddingBottom: "2px",
+            }}
+          >
+            <span>Email</span>
+            <span
+              aria-hidden="true"
+              className="transition-transform group-hover:translate-x-1"
+            >
+              →
+            </span>
+          </a>
         </div>
 
         {/* Marked rule */}
@@ -160,7 +180,7 @@ export default function Footer() {
             color: "rgba(246, 220, 159, 0.55)",
           }}
         >
-          <span>© {year} MartialOps · All Rights Reserved</span>
+          <span>© {year} Fitore · All Rights Reserved</span>
 
           <span className="hidden md:inline">
             No. 01 · The Method · Est. 2026

@@ -29,8 +29,9 @@ export default function PageHeader({ label, title, meta }: Props) {
       />
 
       <div className="relative mx-auto max-w-6xl">
+        {/* Eyebrow row with pulse indicator */}
         <div
-          className="mb-8 flex items-center gap-3"
+          className="mb-6 flex items-center gap-3"
           style={{
             fontFamily: "var(--font-mono)",
             fontSize: "var(--text-eyebrow)",
@@ -39,16 +40,16 @@ export default function PageHeader({ label, title, meta }: Props) {
             color: "var(--color-ink-muted)",
           }}
         >
-          <span
-            aria-hidden="true"
-            className="inline-block"
-            style={{
-              width: "6px",
-              height: "6px",
-              backgroundColor: "var(--color-accent)",
-              transform: "rotate(45deg)",
-            }}
-          />
+          <span aria-hidden="true" className="relative inline-flex h-2 w-2">
+            <span
+              className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-70"
+              style={{ backgroundColor: "var(--color-accent)" }}
+            />
+            <span
+              className="relative inline-flex h-2 w-2 rounded-full"
+              style={{ backgroundColor: "var(--color-accent)" }}
+            />
+          </span>
           <span>{label}</span>
           {meta && (
             <>
@@ -59,6 +60,16 @@ export default function PageHeader({ label, title, meta }: Props) {
             </>
           )}
         </div>
+
+        {/* Accent ribbon — short thick bar before the title */}
+        <div
+          className="mb-6 h-1.5 w-16"
+          style={{
+            background: `linear-gradient(90deg, var(--color-accent) 0%, var(--color-accent-hover) 100%)`,
+            boxShadow: "var(--shadow-accent-md)",
+          }}
+          aria-hidden="true"
+        />
 
         <h1
           className="gradient-text-ink"
@@ -75,10 +86,19 @@ export default function PageHeader({ label, title, meta }: Props) {
           {title}
         </h1>
 
-        <div
-          className="mt-10 h-px w-full"
-          style={{ backgroundColor: "var(--color-rule-strong)" }}
-        />
+        {/* Divider: hairline with accent segment on the left */}
+        <div className="mt-10 flex items-center gap-0" aria-hidden="true">
+          <div
+            className="h-px w-32"
+            style={{
+              background: `linear-gradient(90deg, var(--color-accent) 0%, var(--color-accent) 100%)`,
+            }}
+          />
+          <div
+            className="h-px flex-1"
+            style={{ backgroundColor: "var(--color-rule-strong)" }}
+          />
+        </div>
       </div>
     </header>
   )
