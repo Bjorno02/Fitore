@@ -27,6 +27,13 @@ const REMOVE_ERRORS: Record<string, string> = {
   not_a_member: "That member is no longer in the gym.",
 }
 
+const ROLE_CHANGE_ERRORS: Record<string, string> = {
+  cant_modify_self: "Can't change your own role — ask another admin.",
+  last_admin: "Can't demote the only admin.",
+  not_a_member: "That member is no longer in the gym.",
+  invalid_input: "That role isn't valid.",
+}
+
 export default function MembersPanel({
   gymId,
   currentUserId,
@@ -82,6 +89,23 @@ export default function MembersPanel({
     setPendingRemoveId(null)
   }
 
+  async function handleRoleChange(userId: string, role: Role) {
+    setError(null)
+    const res = await fetch(`/api/gyms/${gymId}/members/${userId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role }),
+    })
+    if (res.ok) {
+      await refresh()
+    } else {
+      const data = await res.json().catch(() => ({}))
+      const key = typeof data?.error === "string" ? data.error : ""
+      setError(ROLE_CHANGE_ERRORS[key] ?? "Couldn't change that role.")
+      await refresh()
+    }
+  }
+
   const adminCount = members.filter((m) => m.role === "ADMIN").length
   const myRank = ROLE_RANK[currentUserRole]
 
@@ -89,6 +113,14 @@ export default function MembersPanel({
     if (m.userId === currentUserId) return false
     if (myRank <= ROLE_RANK[m.role]) return false
     if (m.role === "ADMIN" && adminCount <= 1) return false
+    return true
+  }
+
+  const canChangeRoles = currentUserRole === "ADMIN"
+
+  function canChangeTargetRole(m: Member): boolean {
+    if (!canChangeRoles) return false
+    if (m.userId === currentUserId) return false
     return true
   }
 
@@ -217,20 +249,45 @@ export default function MembersPanel({
                     )}
                   </div>
 
-                  <span
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "11px",
-                      letterSpacing: "var(--tracking-label)",
-                      textTransform: "uppercase",
-                      color:
-                        m.role === "ADMIN"
-                          ? "var(--color-accent)"
-                          : "var(--color-ink-muted)",
-                    }}
-                  >
-                    {m.role}
-                  </span>
+                  {canChangeTargetRole(m) ? (
+                    <select
+                      value={m.role}
+                      onChange={(e) =>
+                        handleRoleChange(m.userId, e.target.value as Role)
+                      }
+                      className="border bg-transparent px-2 py-1 transition-colors hover:border-[var(--color-accent)] focus:border-[var(--color-accent)] focus:outline-none"
+                      style={{
+                        borderColor: "var(--color-rule-strong)",
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "11px",
+                        letterSpacing: "var(--tracking-label)",
+                        textTransform: "uppercase",
+                        color:
+                          m.role === "ADMIN"
+                            ? "var(--color-accent)"
+                            : "var(--color-ink)",
+                      }}
+                    >
+                      <option value="ATHLETE">Athlete</option>
+                      <option value="COACH">Coach</option>
+                      <option value="ADMIN">Admin</option>
+                    </select>
+                  ) : (
+                    <span
+                      style={{
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "11px",
+                        letterSpacing: "var(--tracking-label)",
+                        textTransform: "uppercase",
+                        color:
+                          m.role === "ADMIN"
+                            ? "var(--color-accent)"
+                            : "var(--color-ink-muted)",
+                      }}
+                    >
+                      {m.role}
+                    </span>
+                  )}
 
                   {pendingRemoveId === m.userId ? (
                     <div className="flex items-center gap-2">

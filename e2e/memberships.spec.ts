@@ -14,3 +14,10 @@ test("DELETE /api/memberships/me requires auth", async ({ request }) => {
   const res = await request.delete("/api/memberships/me?gymId=fake")
   expect(res.status()).toBe(401)
 })
+
+test("PATCH /api/gyms/[id]/members/[userId] requires auth", async ({ request }) => {
+  const res = await request.patch("/api/gyms/fake/members/fake-user", {
+    data: { role: "COACH" },
+  })
+  expect(res.status()).toBe(401)
+})
