@@ -12,7 +12,7 @@ import {
 
 function DiamondDivider() {
   return (
-    <div className="mx-auto max-w-6xl px-6 md:px-12">
+    <div className="mx-auto max-w-6xl px-5 md:px-12">
       <div className="flex items-center gap-6 py-6">
         <DashedRule className="flex-1" />
         <span
@@ -56,7 +56,7 @@ function SectionBlock({
       initial={{ opacity: 0, y: 40 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-      className="mx-auto max-w-6xl px-6 py-20 md:px-12 md:py-28"
+      className="mx-auto max-w-6xl px-5 py-20 md:px-12 md:py-28"
     >
       <div className="grid grid-cols-12 gap-8">
         {/* Left gutter: reference notation, ruler, marginalia */}
@@ -191,7 +191,7 @@ export default function HowItWorksPage() {
   return (
     <main className="relative">
       {/* ── Masthead meta strip ─────────────────────────────── */}
-      <div className="mx-auto max-w-6xl px-6 md:px-12">
+      <div className="mx-auto max-w-6xl px-5 md:px-12">
         <div
           className="flex flex-wrap items-center justify-between gap-3 border-b py-4"
           style={{
@@ -244,7 +244,7 @@ export default function HowItWorksPage() {
           }}
         />
 
-        <div className="mx-auto max-w-6xl px-6 pb-32 pt-24 md:px-12 md:pb-40 md:pt-32">
+        <div className="mx-auto max-w-6xl px-5 pb-32 pt-24 md:px-12 md:pb-40 md:pt-32">
           {/* Eyebrow with bracket notation */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -467,7 +467,7 @@ export default function HowItWorksPage() {
           }}
         />
 
-        <div className="mx-auto max-w-6xl px-6 py-32 md:px-12 md:py-48">
+        <div className="mx-auto max-w-6xl px-5 py-32 md:px-12 md:py-48">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={inversionInView ? { opacity: 1, y: 0 } : {}}

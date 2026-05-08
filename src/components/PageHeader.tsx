@@ -9,7 +9,7 @@ type Props = {
 export default function PageHeader({ label, title, meta }: Props) {
   return (
     <header
-      className="frost-enter relative overflow-hidden px-6 pb-10 pt-16 md:px-12 md:pb-14 md:pt-24"
+      className="frost-enter relative overflow-hidden px-5 pb-10 pt-16 md:px-12 md:pb-14 md:pt-24"
       style={{ color: "var(--color-ink)" }}
     >
       {/* Faint dot texture, top-right corner */}
@@ -31,7 +31,7 @@ export default function PageHeader({ label, title, meta }: Props) {
       <div className="relative mx-auto max-w-6xl">
         {/* Eyebrow row with pulse indicator */}
         <div
-          className="mb-6 flex items-center gap-3"
+          className="mb-6 flex flex-wrap items-center gap-3"
           style={{
             fontFamily: "var(--font-mono)",
             fontSize: "var(--text-eyebrow)",

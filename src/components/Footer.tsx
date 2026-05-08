@@ -171,7 +171,7 @@ export default function Footer() {
 
         {/* Bottom meta row */}
         <div
-          className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3"
+          className="flex flex-col gap-y-3 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-x-6"
           style={{
             fontFamily: "var(--font-mono)",
             fontSize: "10px",

@@ -107,7 +107,7 @@ export default function MobileNav({ links, active, all }: Props) {
         aria-label={open ? "Close navigation" : "Open navigation"}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center justify-center md:hidden"
+        className="flex items-center justify-center lg:hidden"
         style={{
           width: "44px",
           height: "44px",
@@ -168,8 +168,13 @@ export default function MobileNav({ links, active, all }: Props) {
                   animate={{ x: 0 }}
                   exit={{ x: "-100%" }}
                   transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-                  className="fixed left-0 top-0 z-[70] flex h-full w-[85vw] max-w-[360px] flex-col"
+                  className="z-[70] flex flex-col"
                   style={{
+                    position: "fixed",
+                    inset: 0,
+                    height: "100vh",
+                    width: "100vw",
+                    maxWidth: "100vw",
                     background:
                       "linear-gradient(180deg, var(--color-ink) 0%, var(--color-ink-deepest) 100%)",
                     color: "var(--color-canvas)",
@@ -280,55 +285,40 @@ export default function MobileNav({ links, active, all }: Props) {
                           Active Gym
                         </div>
                         <div className="flex flex-col gap-1">
-                          {all.length <= 1 ? (
-                            <div
-                              className="py-3"
-                              style={{
-                                fontFamily: "var(--font-mono)",
-                                fontSize: "13px",
-                                letterSpacing: "0.12em",
-                                textTransform: "uppercase",
-                                color: "var(--color-accent-bright)",
-                              }}
-                            >
-                              {active.gym.name}
-                            </div>
-                          ) : (
-                            all.map((m) => {
-                              const isActive = m.gymId === active.gymId
-                              return (
-                                <button
-                                  key={m.gymId}
-                                  type="button"
-                                  onClick={() => handleSwitch(m.gymId)}
-                                  disabled={pendingGym !== null}
-                                  className="flex items-center justify-between py-3 text-left"
+                          {all.map((m) => {
+                            const isActive = m.gymId === active.gymId
+                            return (
+                              <button
+                                key={m.gymId}
+                                type="button"
+                                onClick={() => handleSwitch(m.gymId)}
+                                disabled={pendingGym !== null}
+                                className="flex items-center justify-between py-3 text-left"
+                                style={{
+                                  fontFamily: "var(--font-mono)",
+                                  fontSize: "13px",
+                                  letterSpacing: "0.12em",
+                                  textTransform: "uppercase",
+                                  color: isActive
+                                    ? "var(--color-accent-bright)"
+                                    : "var(--color-canvas)",
+                                  opacity: isActive ? 1 : 0.78,
+                                }}
+                              >
+                                <span>{m.gym.name}</span>
+                                <span
                                   style={{
-                                    fontFamily: "var(--font-mono)",
-                                    fontSize: "13px",
-                                    letterSpacing: "0.12em",
-                                    textTransform: "uppercase",
-                                    color: isActive
-                                      ? "var(--color-accent-bright)"
-                                      : "var(--color-canvas)",
-                                    opacity: isActive ? 1 : 0.78,
+                                    fontSize: "10px",
+                                    letterSpacing: "0.2em",
+                                    opacity: isActive ? 1 : 0.55,
                                   }}
                                 >
-                                  <span>{m.gym.name}</span>
-                                  <span
-                                    style={{
-                                      fontSize: "10px",
-                                      letterSpacing: "0.2em",
-                                      opacity: isActive ? 1 : 0.55,
-                                    }}
-                                  >
-                                    {isActive ? "● " : ""}
-                                    {m.role}
-                                  </span>
-                                </button>
-                              )
-                            })
-                          )}
+                                  {isActive ? "● " : ""}
+                                  {m.role}
+                                </span>
+                              </button>
+                            )
+                          })}
                           <Link
                             href="/onboarding"
                             onClick={() => setOpen(false)}

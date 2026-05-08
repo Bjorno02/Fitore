@@ -48,7 +48,7 @@ export default async function Navbar() {
       <div className="flex items-stretch justify-between px-6 md:px-10">
         {/* Left block: wordmark + eagle + links */}
         <div className="flex items-stretch gap-3 md:gap-8">
-          <div className="flex items-center md:hidden">
+          <div className="flex items-center lg:hidden">
             <MobileNav
               links={links}
               active={ctx?.active ?? null}
@@ -94,7 +94,7 @@ export default async function Navbar() {
 
           <div
             aria-hidden="true"
-            className="my-4 hidden md:block"
+            className="my-4 hidden lg:block"
             style={{
               width: "1px",
               background:
@@ -103,14 +103,14 @@ export default async function Navbar() {
           />
 
           {ctx && (
-            <div className="my-4 hidden items-center md:flex">
+            <div className="my-4 hidden items-center lg:flex">
               <GymSwitcher active={ctx.active} all={ctx.all} />
             </div>
           )}
 
           <div
             aria-hidden="true"
-            className="my-4 hidden md:block"
+            className="my-4 hidden lg:block"
             style={{
               width: "1px",
               background:
@@ -118,7 +118,7 @@ export default async function Navbar() {
             }}
           />
 
-          <div className="hidden items-stretch md:flex">
+          <div className="hidden items-stretch lg:flex">
             {links.map((l, i) => (
               <div key={l.href} className="flex items-stretch">
                 {i > 0 && (
@@ -136,13 +136,11 @@ export default async function Navbar() {
                 )}
                 <Link
                   href={l.href}
-                  className="group relative flex items-center px-4 transition-opacity hover:opacity-100"
+                  className="group relative flex items-center px-3 text-[10px] tracking-[0.14em] transition-opacity hover:opacity-100 xl:px-4 xl:text-[11px] xl:tracking-[0.2em]"
                   style={{
                     fontFamily: "var(--font-mono)",
-                    fontSize: "11px",
                     fontWeight: 500,
                     textTransform: "uppercase",
-                    letterSpacing: "0.2em",
                     color: "var(--color-canvas)",
                     opacity: 0.75,
                   }}
@@ -150,7 +148,7 @@ export default async function Navbar() {
                   <span>{l.label}</span>
                   <span
                     aria-hidden="true"
-                    className="absolute bottom-2 left-4 right-4 origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
+                    className="absolute bottom-2 left-3 right-3 origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100 xl:left-4 xl:right-4"
                     style={{
                       height: "2px",
                       background:
@@ -165,12 +163,12 @@ export default async function Navbar() {
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="hidden md:inline-flex">
+          <div className="hidden lg:inline-flex">
             <ThemeToggle />
           </div>
           <span
             aria-hidden="true"
-            className="hidden md:inline"
+            className="hidden lg:inline"
             style={{
               color: "rgba(246, 220, 159, 0.25)",
               fontFamily: "var(--font-mono)",
@@ -227,7 +225,7 @@ export default async function Navbar() {
           </Link>
           <span
             aria-hidden="true"
-            className="hidden md:inline"
+            className="hidden lg:inline"
             style={{
               color: "rgba(246, 220, 159, 0.25)",
               fontFamily: "var(--font-mono)",
@@ -236,7 +234,7 @@ export default async function Navbar() {
           >
             ·
           </span>
-          <div className="hidden md:inline-flex">
+          <div className="hidden lg:inline-flex">
             <SignOutButton />
           </div>
         </div>
