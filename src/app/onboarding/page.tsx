@@ -90,7 +90,7 @@ export default function OnboardingPage() {
         }}
       />
 
-      <div className="mx-auto max-w-6xl px-6 md:px-12">
+      <div className="mx-auto max-w-6xl px-5 md:px-12">
         <div
           className="flex flex-wrap items-center justify-between gap-3 border-b py-4"
           style={{
@@ -110,7 +110,7 @@ export default function OnboardingPage() {
         </div>
       </div>
 
-      <section className="mx-auto max-w-6xl px-6 pb-16 pt-20 md:px-12 md:pt-28">
+      <section className="mx-auto max-w-6xl px-5 pb-16 pt-20 md:px-12 md:pt-28">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -188,7 +188,7 @@ export default function OnboardingPage() {
         </h1>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 pb-24 md:px-12">
+      <section className="mx-auto max-w-6xl px-5 pb-24 md:px-12">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2 md:gap-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -271,7 +271,7 @@ export default function OnboardingPage() {
                   value={gymName}
                   onChange={(e) => setGymName(e.target.value)}
                   placeholder="e.g. Downtown BJJ"
-                  className="border-b bg-transparent py-3 outline-none transition-colors focus:border-[var(--color-accent)]"
+                  className="border-b bg-transparent py-3.5 outline-none transition-colors focus:border-[var(--color-accent)]"
                   style={{
                     borderColor: "var(--color-rule-strong)",
                     color: "var(--color-ink)",
@@ -402,7 +402,7 @@ export default function OnboardingPage() {
                   autoComplete="off"
                   spellCheck={false}
                   autoCapitalize="off"
-                  className="border-b bg-transparent py-3 outline-none transition-colors focus:border-[var(--color-accent)]"
+                  className="border-b bg-transparent py-3.5 outline-none transition-colors focus:border-[var(--color-accent)]"
                   style={{
                     borderColor: "var(--color-rule-strong)",
                     color: "var(--color-ink)",

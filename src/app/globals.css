@@ -113,7 +113,7 @@
     --color-ink:             #0f172a;
     --color-ink-soft:        #1e293b;
     --color-ink-muted:       #475569;
-    --color-ink-faint:       #94a3b8;
+    --color-ink-faint:       #6395bd;
     --color-ink-whisper:     #cbd5e1;
 
     /* Cool mid-tones (occupy rose slots — cool stain ambient) */
@@ -161,12 +161,32 @@
     background-attachment: fixed;
   }
 
-  /* Cool mode scrollbar track */
-  :root[data-theme="cool"] ::-webkit-scrollbar-track {
-    background: rgba(15, 23, 42, 0.06);
+  /* cool-mode scrollbar override is handled in the main scrollbar section below */
+}
+
+/* ─── mobile ─── */
+
+@media (hover: none) {
+  /* don't stick post-tap on touch */
+  .group:hover .group-hover\:translate-x-1,
+  .group:hover .group-hover\:translate-x-0\.5,
+  .group:hover .group-hover\:scale-x-100,
+  .group:hover .group-hover\:opacity-100 {
+    transform: none;
+    opacity: inherit;
   }
-  :root[data-theme="cool"] {
-    scrollbar-color: var(--color-ink) rgba(15, 23, 42, 0.06);
+
+  .hover\:-translate-y-0\.5:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 768px) {
+  /* prevent ios zoom-on-focus */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
   }
 }
 
@@ -332,61 +352,96 @@ a[href]:not([class*="btn-"]):not([class*="card-"]):active,
 .frost-enter-3 { animation: frost-rise 0.5s 0.16s ease-out both; }
 .frost-enter-4 { animation: frost-rise 0.5s 0.24s ease-out both; }
 
-/* ─── Custom scrollbar — dark oxblood ─── */
-/* Webkit (Chrome, Safari, Edge) */
+/* ─── scrollbar — accent-tinted per theme ─── */
+
+/* warm: honey-gold thumb on faint gold track */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(77, 30, 20, 0.06);
+  background: rgba(176, 138, 60, 0.1);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-ink);
+  background: var(--color-gold);
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-ink-deepest);
+  background: var(--color-accent-bright);
   background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:active {
-  background: var(--color-ink-deepest);
+  background: var(--color-accent);
   background-clip: padding-box;
 }
 ::-webkit-scrollbar-corner {
   background: transparent;
 }
-
-/* Scrollbar buttons / clickers (visible only on some platforms) */
 ::-webkit-scrollbar-button {
-  background: var(--color-ink);
+  background: var(--color-gold);
   display: block;
   height: 14px;
   width: 10px;
 }
 ::-webkit-scrollbar-button:hover {
-  background: var(--color-ink-deepest);
+  background: var(--color-accent-bright);
 }
 ::-webkit-scrollbar-button:vertical:start:decrement {
   background:
     linear-gradient(135deg, transparent 45%, var(--color-canvas) 45% 55%, transparent 55%) no-repeat center,
-    var(--color-ink);
+    var(--color-gold);
   background-size: 6px 6px, auto;
   background-repeat: no-repeat, no-repeat;
 }
 ::-webkit-scrollbar-button:vertical:end:increment {
   background:
     linear-gradient(315deg, transparent 45%, var(--color-canvas) 45% 55%, transparent 55%) no-repeat center,
-    var(--color-ink);
+    var(--color-gold);
   background-size: 6px 6px, auto;
   background-repeat: no-repeat, no-repeat;
 }
-
-/* Firefox — scrollbar-color: thumb track */
 html {
-  scrollbar-color: var(--color-ink) rgba(77, 30, 20, 0.06);
+  scrollbar-color: var(--color-gold) rgba(176, 138, 60, 0.1);
   scrollbar-width: thin;
+}
+
+/* cool: lavender-purple thumb on faint violet track */
+:root[data-theme="cool"] ::-webkit-scrollbar-track {
+  background: rgba(99, 149, 189, 0.1);
+}
+:root[data-theme="cool"] ::-webkit-scrollbar-thumb {
+  background: #6395bd;
+  background-clip: padding-box;
+}
+:root[data-theme="cool"] ::-webkit-scrollbar-thumb:hover {
+  background: #8ab4d4;
+  background-clip: padding-box;
+}
+:root[data-theme="cool"] ::-webkit-scrollbar-thumb:active {
+  background: #a8c8e0;
+  background-clip: padding-box;
+}
+:root[data-theme="cool"] ::-webkit-scrollbar-button {
+  background: #6395bd;
+}
+:root[data-theme="cool"] ::-webkit-scrollbar-button:hover {
+  background: #8ab4d4;
+}
+:root[data-theme="cool"] ::-webkit-scrollbar-button:vertical:start:decrement {
+  background:
+    linear-gradient(135deg, transparent 45%, var(--color-canvas) 45% 55%, transparent 55%) no-repeat center,
+    #6395bd;
+  background-size: 6px 6px, auto;
+}
+:root[data-theme="cool"] ::-webkit-scrollbar-button:vertical:end:increment {
+  background:
+    linear-gradient(315deg, transparent 45%, var(--color-canvas) 45% 55%, transparent 55%) no-repeat center,
+    #6395bd;
+  background-size: 6px 6px, auto;
+}
+:root[data-theme="cool"] {
+  scrollbar-color: #6395bd rgba(99, 149, 189, 0.1);
 }
 
 /* Number input spinners — hide native, too hard to style well */

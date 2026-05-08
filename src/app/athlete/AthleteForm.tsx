@@ -157,7 +157,7 @@ function PrimaryCTA({
     <button
       {...rest}
       disabled={disabled}
-      className="group mt-auto flex items-center justify-between border px-6 py-4 transition-all hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
+      className="group mt-auto flex w-full items-center justify-between border px-6 py-4 transition-all hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0 md:w-auto"
       style={{
         backgroundColor: "var(--color-accent)",
         borderColor: "var(--color-accent-hover)",
@@ -281,7 +281,7 @@ export default function AthleteForm({ gymId }: { gymId: string }) {
           noValidate
           className="flex flex-1 flex-col gap-6"
         >
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div className="flex flex-col gap-2">
               <MonoLabel>Duration (min)</MonoLabel>
               <EditorialInput
@@ -334,7 +334,7 @@ export default function AthleteForm({ gymId }: { gymId: string }) {
           noValidate
           className="flex flex-1 flex-col gap-6"
         >
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
             <div className="flex flex-col gap-2">
               <MonoLabel>Sleep</MonoLabel>
               <EditorialInput
@@ -367,7 +367,7 @@ export default function AthleteForm({ gymId }: { gymId: string }) {
             </div>
           </div>
           <label
-            className="group flex cursor-pointer items-center gap-3 border border-transparent px-1 py-2 transition-colors hover:border-[var(--color-rule)]"
+            className="group flex cursor-pointer items-center gap-3 border border-transparent px-1 py-3 transition-colors hover:border-[var(--color-rule)]"
           >
             <span
               className="relative inline-flex h-4 w-4 items-center justify-center border"

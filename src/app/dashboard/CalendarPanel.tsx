@@ -169,7 +169,7 @@ export default function CalendarPanel({
               onClick={handlePrevMonth}
               disabled={loadingMonth}
               aria-label="Previous month"
-              className="border px-3 py-1 transition-all hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center border px-3 transition-all hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
               style={{
                 borderColor: "var(--color-ink)",
                 color: "var(--color-ink)",
@@ -197,7 +197,7 @@ export default function CalendarPanel({
               onClick={handleNextMonth}
               disabled={loadingMonth}
               aria-label="Next month"
-              className="border px-3 py-1 transition-all hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center border px-3 transition-all hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
               style={{
                 borderColor: "var(--color-ink)",
                 color: "var(--color-ink)",

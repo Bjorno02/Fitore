@@ -45,7 +45,7 @@ export default function HomeHero({ gymName, userName }: Props) {
         }}
       />
 
-      <div className="relative mx-auto max-w-6xl px-6 pb-20 pt-16 md:px-12 md:pb-28 md:pt-24">
+      <div className="relative mx-auto max-w-6xl px-5 pb-20 pt-16 md:px-12 md:pb-28 md:pt-24">
         {/* Masthead meta strip */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -81,7 +81,7 @@ export default function HomeHero({ gymName, userName }: Props) {
             </>
           )}
           <span
-            className="ml-auto hidden md:flex items-center gap-2"
+            className="flex items-center gap-2 md:ml-auto"
             style={{ color: "var(--color-ink-faint)" }}
           >
             <span>Your Training</span>
@@ -122,6 +122,7 @@ export default function HomeHero({ gymName, userName }: Props) {
             lineHeight: "var(--leading-display)",
             letterSpacing: "var(--tracking-display)",
             textTransform: "uppercase",
+            wordBreak: "break-word",
           }}
         >
           <div style={{ overflow: "hidden" }}>

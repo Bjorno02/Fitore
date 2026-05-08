@@ -357,7 +357,7 @@ export default function InviteCodesPanel({ gymId }: { gymId: string }) {
                   <button
                     type="button"
                     onClick={() => handleRevoke(c.id)}
-                    className="border px-4 py-2 transition-all hover:-translate-y-0.5"
+                    className="flex min-h-[44px] items-center border px-4 transition-all hover:-translate-y-0.5"
                     style={{
                       borderColor: "var(--color-ink)",
                       color: "var(--color-ink)",

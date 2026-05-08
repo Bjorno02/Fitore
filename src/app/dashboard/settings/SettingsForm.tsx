@@ -63,7 +63,7 @@ function SettingRow({
           const v = parseFloat(e.target.value)
           if (isFinite(v)) onChange(v)
         }}
-        className="w-24 border-b bg-transparent py-1 text-right text-lg outline-none transition-colors focus:border-[var(--color-accent)]"
+        className="w-24 min-h-[44px] border-b bg-transparent py-2 text-right text-lg outline-none transition-colors focus:border-[var(--color-accent)]"
         style={{
           borderColor: "var(--color-rule-strong)",
           color: "var(--color-ink)",
@@ -253,11 +253,11 @@ export default function SettingsForm({
           )}
         </AnimatePresence>
 
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
           <button
             onClick={save}
             disabled={!dirty || saving}
-            className="group flex items-center gap-3 border px-6 py-3 transition-all hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
+            className="group flex w-full items-center justify-center gap-3 border px-6 py-3 transition-all hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0 sm:w-auto sm:justify-start"
             style={{
               backgroundColor: dirty && !saving ? "var(--color-accent)" : "transparent",
               borderColor: dirty && !saving ? "var(--color-accent-hover)" : "var(--color-ink)",
@@ -282,7 +282,7 @@ export default function SettingsForm({
 
           <button
             onClick={resetToDefaults}
-            className="transition-opacity hover:opacity-100"
+            className="min-h-[44px] px-2 transition-opacity hover:opacity-100"
             style={{
               background: "none",
               border: "none",

@@ -41,11 +41,11 @@ export default function LeaveGymButton({
 
   if (!confirming) {
     return (
-      <div className="mt-12 border-t pt-8" style={{ borderColor: "var(--color-rule)" }}>
+      <div>
         <button
           type="button"
           onClick={() => setConfirming(true)}
-          className="group inline-flex items-center gap-3 border px-5 py-3 transition-all hover:-translate-y-0.5"
+          className="group inline-flex items-center gap-3 border px-5 py-3.5 transition-all hover:-translate-y-0.5"
           style={{
             borderColor: "var(--color-rule-strong)",
             color: "var(--color-ink-soft)",
@@ -77,7 +77,7 @@ export default function LeaveGymButton({
   }
 
   return (
-    <div className="mt-12 border-t pt-8" style={{ borderColor: "var(--color-rule)" }}>
+    <div>
       <p
         className="mb-5 max-w-xl"
         style={{
@@ -93,7 +93,7 @@ export default function LeaveGymButton({
           type="button"
           onClick={handleLeave}
           disabled={leaving}
-          className="group flex items-center gap-3 border px-5 py-3 transition-all hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
+          className="group flex items-center gap-3 border px-5 py-3.5 transition-all hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
           style={{
             backgroundColor: "#b91c1c",
             borderColor: "#7f1d1d",
@@ -114,7 +114,7 @@ export default function LeaveGymButton({
             setError(null)
           }}
           disabled={leaving}
-          className="border px-5 py-3 transition-all hover:-translate-y-0.5 disabled:opacity-40"
+          className="border px-5 py-3.5 transition-all hover:-translate-y-0.5 disabled:opacity-40"
           style={{
             borderColor: "var(--color-ink)",
             color: "var(--color-ink)",

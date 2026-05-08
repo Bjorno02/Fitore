@@ -207,7 +207,7 @@ export default function MembersPanel({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.25 }}
-                  className="grid grid-cols-[1fr_auto_auto] items-center gap-6 border-b py-4"
+                  className="flex flex-col gap-3 border-b py-4 md:grid md:grid-cols-[1fr_auto_auto] md:items-center md:gap-6"
                   style={{ borderColor: "var(--color-rule)" }}
                 >
                   <div className="flex flex-col gap-1">
@@ -249,102 +249,104 @@ export default function MembersPanel({
                     )}
                   </div>
 
-                  {canChangeTargetRole(m) ? (
-                    <select
-                      value={m.role}
-                      onChange={(e) =>
-                        handleRoleChange(m.userId, e.target.value as Role)
-                      }
-                      className="border bg-transparent px-2 py-1 transition-colors hover:border-[var(--color-accent)] focus:border-[var(--color-accent)] focus:outline-none"
-                      style={{
-                        borderColor: "var(--color-rule-strong)",
-                        fontFamily: "var(--font-mono)",
-                        fontSize: "11px",
-                        letterSpacing: "var(--tracking-label)",
-                        textTransform: "uppercase",
-                        color:
-                          m.role === "ADMIN"
-                            ? "var(--color-accent)"
-                            : "var(--color-ink)",
-                      }}
-                    >
-                      <option value="ATHLETE">Athlete</option>
-                      <option value="COACH">Coach</option>
-                      <option value="ADMIN">Admin</option>
-                    </select>
-                  ) : (
-                    <span
-                      style={{
-                        fontFamily: "var(--font-mono)",
-                        fontSize: "11px",
-                        letterSpacing: "var(--tracking-label)",
-                        textTransform: "uppercase",
-                        color:
-                          m.role === "ADMIN"
-                            ? "var(--color-accent)"
-                            : "var(--color-ink-muted)",
-                      }}
-                    >
-                      {m.role}
-                    </span>
-                  )}
-
-                  {pendingRemoveId === m.userId ? (
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleRemove(m.userId)}
-                        className="border px-3 py-2 transition-all hover:-translate-y-0.5"
+                  <div className="flex items-center justify-between gap-3 md:contents">
+                    {canChangeTargetRole(m) ? (
+                      <select
+                        value={m.role}
+                        onChange={(e) =>
+                          handleRoleChange(m.userId, e.target.value as Role)
+                        }
+                        className="min-h-[44px] border bg-transparent px-2 transition-colors hover:border-[var(--color-accent)] focus:border-[var(--color-accent)] focus:outline-none"
                         style={{
-                          backgroundColor: "#b91c1c",
-                          borderColor: "#7f1d1d",
-                          color: "var(--color-canvas)",
+                          borderColor: "var(--color-rule-strong)",
                           fontFamily: "var(--font-mono)",
-                          fontSize: "10px",
-                          fontWeight: 700,
-                          textTransform: "uppercase",
+                          fontSize: "16px",
                           letterSpacing: "var(--tracking-label)",
+                          textTransform: "uppercase",
+                          color:
+                            m.role === "ADMIN"
+                              ? "var(--color-accent)"
+                              : "var(--color-ink)",
                         }}
                       >
-                        Confirm
-                      </button>
+                        <option value="ATHLETE">Athlete</option>
+                        <option value="COACH">Coach</option>
+                        <option value="ADMIN">Admin</option>
+                      </select>
+                    ) : (
+                      <span
+                        style={{
+                          fontFamily: "var(--font-mono)",
+                          fontSize: "11px",
+                          letterSpacing: "var(--tracking-label)",
+                          textTransform: "uppercase",
+                          color:
+                            m.role === "ADMIN"
+                              ? "var(--color-accent)"
+                              : "var(--color-ink-muted)",
+                        }}
+                      >
+                        {m.role}
+                      </span>
+                    )}
+
+                    {pendingRemoveId === m.userId ? (
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleRemove(m.userId)}
+                          className="flex min-h-[44px] items-center border px-3 transition-all hover:-translate-y-0.5"
+                          style={{
+                            backgroundColor: "#b91c1c",
+                            borderColor: "#7f1d1d",
+                            color: "var(--color-canvas)",
+                            fontFamily: "var(--font-mono)",
+                            fontSize: "10px",
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            letterSpacing: "var(--tracking-label)",
+                          }}
+                        >
+                          Confirm
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPendingRemoveId(null)}
+                          className="flex min-h-[44px] items-center border px-3 transition-all hover:-translate-y-0.5"
+                          style={{
+                            borderColor: "var(--color-ink)",
+                            color: "var(--color-ink)",
+                            fontFamily: "var(--font-mono)",
+                            fontSize: "10px",
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            letterSpacing: "var(--tracking-label)",
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
                       <button
                         type="button"
-                        onClick={() => setPendingRemoveId(null)}
-                        className="border px-3 py-2 transition-all hover:-translate-y-0.5"
+                        onClick={() => setPendingRemoveId(m.userId)}
+                        disabled={!removable}
+                        className="flex min-h-[44px] items-center border px-4 transition-all hover:-translate-y-0.5 disabled:opacity-30 disabled:hover:translate-y-0"
                         style={{
                           borderColor: "var(--color-ink)",
                           color: "var(--color-ink)",
                           fontFamily: "var(--font-mono)",
-                          fontSize: "10px",
-                          fontWeight: 700,
+                          fontSize: "11px",
+                          fontWeight: 600,
                           textTransform: "uppercase",
                           letterSpacing: "var(--tracking-label)",
+                          cursor: removable ? "pointer" : "not-allowed",
                         }}
                       >
-                        Cancel
+                        Remove
                       </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setPendingRemoveId(m.userId)}
-                      disabled={!removable}
-                      className="border px-4 py-2 transition-all hover:-translate-y-0.5 disabled:opacity-30 disabled:hover:translate-y-0"
-                      style={{
-                        borderColor: "var(--color-ink)",
-                        color: "var(--color-ink)",
-                        fontFamily: "var(--font-mono)",
-                        fontSize: "11px",
-                        fontWeight: 600,
-                        textTransform: "uppercase",
-                        letterSpacing: "var(--tracking-label)",
-                        cursor: removable ? "pointer" : "not-allowed",
-                      }}
-                    >
-                      Remove
-                    </button>
-                  )}
+                    )}
+                  </div>
                 </motion.div>
               )
             })}

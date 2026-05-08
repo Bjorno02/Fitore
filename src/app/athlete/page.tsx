@@ -1,9 +1,9 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
-import prisma from "@/lib/prisma"
 import AthleteForm from "./AthleteForm"
 import PageHeader from "@/components/PageHeader"
+import { getActiveGymContext } from "@/lib/active-gym"
 
 export default async function AthletePage() {
   const session = await auth()
@@ -12,14 +12,10 @@ export default async function AthletePage() {
     redirect("/login")
   }
 
-  const membership = await prisma.membership.findFirst({
-    where: { userId: session.user.id },
-    include: { gym: true },
-  })
-
-  if (!membership) {
+  const ctx = await getActiveGymContext(session.user.id)
+  if (!ctx) {
     return (
-      <main className="mx-auto max-w-6xl px-6 py-24 md:px-12">
+      <main className="mx-auto max-w-6xl px-5 py-24 md:px-12">
         <p
           style={{
             fontFamily: "var(--font-mono)",
@@ -38,15 +34,15 @@ export default async function AthletePage() {
   return (
     <main>
       <PageHeader
-        label={membership.gym.name}
+        label={ctx.active.gym.name}
         title="Training Log"
         meta={session.user.name ?? undefined}
       />
-      <div className="mx-auto max-w-6xl px-6 pb-20 md:px-12">
+      <div className="mx-auto max-w-6xl px-5 pb-20 md:px-12">
         <div className="mb-8 flex justify-end">
           <Link
             href="/athlete/history"
-            className="group inline-flex items-center gap-3 transition-opacity hover:opacity-100"
+            className="group inline-flex items-center gap-3 py-3 transition-opacity hover:opacity-100"
             style={{
               fontFamily: "var(--font-mono)",
               fontSize: "var(--text-eyebrow)",
@@ -65,7 +61,7 @@ export default async function AthletePage() {
             </span>
           </Link>
         </div>
-        <AthleteForm gymId={membership.gymId} />
+        <AthleteForm gymId={ctx.active.gymId} />
       </div>
     </main>
   )

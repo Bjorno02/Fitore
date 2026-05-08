@@ -1,28 +1,28 @@
 import Link from "next/link"
 import { auth } from "@/auth"
-import prisma from "@/lib/prisma"
 import SignOutButton from "./SignOutButton"
 import ThemeToggle from "./ThemeToggle"
+import GymSwitcher from "./GymSwitcher"
+import MobileNav from "./MobileNav"
 import { DoubleHeadedEagle, MarkedRule } from "./Ornaments"
+import { getActiveGymContext } from "@/lib/active-gym"
 
-type NavLink = { href: string; label: string }
+type NavLink = { href: string; label: string; num: string }
 
 export default async function Navbar() {
   const session = await auth()
   if (!session?.user?.id) return null
 
-  const membership = await prisma.membership.findFirst({
-    where: { userId: session.user.id, status: "ACTIVE" },
-  })
+  const ctx = await getActiveGymContext(session.user.id)
 
-  const isCoach = membership?.role === "COACH" || membership?.role === "ADMIN"
+  const isCoach = ctx?.active.role === "COACH" || ctx?.active.role === "ADMIN"
 
   const links: NavLink[] = [
-    { href: "/athlete", label: "Log Training" },
-    ...(isCoach ? [{ href: "/dashboard", label: "Dashboard" }] : []),
-    { href: "/athlete/history", label: "History" },
-    ...(isCoach ? [{ href: "/dashboard/settings", label: "Coach Settings" }] : []),
-    { href: "/how-it-works", label: "How It Works" },
+    { href: "/athlete", num: "01", label: "Log Training" },
+    ...(isCoach ? [{ href: "/dashboard", num: "02", label: "Dashboard" }] : []),
+    { href: "/athlete/history", num: isCoach ? "03" : "02", label: "History" },
+    ...(isCoach ? [{ href: "/dashboard/settings", num: "04", label: "Coach Settings" }] : []),
+    { href: "/how-it-works", num: isCoach ? "05" : "03", label: "How It Works" },
   ]
 
   return (
@@ -47,7 +47,14 @@ export default async function Navbar() {
 
       <div className="flex items-stretch justify-between px-6 md:px-10">
         {/* Left block: wordmark + eagle + links */}
-        <div className="flex items-stretch gap-8">
+        <div className="flex items-stretch gap-3 md:gap-8">
+          <div className="flex items-center lg:hidden">
+            <MobileNav
+              links={links}
+              active={ctx?.active ?? null}
+              all={ctx?.all ?? []}
+            />
+          </div>
           <Link
             href="/"
             className="flex items-center gap-3 py-4"
@@ -87,7 +94,7 @@ export default async function Navbar() {
 
           <div
             aria-hidden="true"
-            className="my-4 hidden md:block"
+            className="my-4 hidden lg:block"
             style={{
               width: "1px",
               background:
@@ -95,7 +102,23 @@ export default async function Navbar() {
             }}
           />
 
-          <div className="hidden items-stretch md:flex">
+          {ctx && (
+            <div className="my-4 hidden items-center lg:flex">
+              <GymSwitcher active={ctx.active} all={ctx.all} />
+            </div>
+          )}
+
+          <div
+            aria-hidden="true"
+            className="my-4 hidden lg:block"
+            style={{
+              width: "1px",
+              background:
+                "linear-gradient(180deg, transparent 0%, rgba(246, 220, 159, 0.28) 50%, transparent 100%)",
+            }}
+          />
+
+          <div className="hidden items-stretch lg:flex">
             {links.map((l, i) => (
               <div key={l.href} className="flex items-stretch">
                 {i > 0 && (
@@ -113,13 +136,11 @@ export default async function Navbar() {
                 )}
                 <Link
                   href={l.href}
-                  className="group relative flex items-center px-4 transition-opacity hover:opacity-100"
+                  className="group relative flex items-center px-3 text-[10px] tracking-[0.14em] transition-opacity hover:opacity-100 xl:px-4 xl:text-[11px] xl:tracking-[0.2em]"
                   style={{
                     fontFamily: "var(--font-mono)",
-                    fontSize: "11px",
                     fontWeight: 500,
                     textTransform: "uppercase",
-                    letterSpacing: "0.2em",
                     color: "var(--color-canvas)",
                     opacity: 0.75,
                   }}
@@ -127,7 +148,7 @@ export default async function Navbar() {
                   <span>{l.label}</span>
                   <span
                     aria-hidden="true"
-                    className="absolute bottom-2 left-4 right-4 origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
+                    className="absolute bottom-2 left-3 right-3 origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100 xl:left-4 xl:right-4"
                     style={{
                       height: "2px",
                       background:
@@ -142,10 +163,12 @@ export default async function Navbar() {
         </div>
 
         <div className="flex items-center gap-4">
-          <ThemeToggle />
+          <div className="hidden lg:inline-flex">
+            <ThemeToggle />
+          </div>
           <span
             aria-hidden="true"
-            className="hidden md:inline"
+            className="hidden lg:inline"
             style={{
               color: "rgba(246, 220, 159, 0.25)",
               fontFamily: "var(--font-mono)",
@@ -202,7 +225,7 @@ export default async function Navbar() {
           </Link>
           <span
             aria-hidden="true"
-            className="hidden md:inline"
+            className="hidden lg:inline"
             style={{
               color: "rgba(246, 220, 159, 0.25)",
               fontFamily: "var(--font-mono)",
@@ -211,7 +234,9 @@ export default async function Navbar() {
           >
             ·
           </span>
-          <SignOutButton />
+          <div className="hidden lg:inline-flex">
+            <SignOutButton />
+          </div>
         </div>
       </div>
 

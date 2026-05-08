@@ -77,16 +77,16 @@ Create a `.env` in the repo root. None are committed; `.env*` is gitignored.
 # Postgres — matches docker-compose.yml defaults
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres"
 
-# NextAuth
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="<generate with: openssl rand -base64 32>"
+# NextAuth v5 (Auth.js)
+AUTH_URL="http://localhost:3000"
+AUTH_SECRET="<generate with: openssl rand -base64 32>"
 
 # Google OAuth (create a client in Google Cloud Console → OAuth 2.0)
-GOOGLE_CLIENT_ID=""
-GOOGLE_CLIENT_SECRET=""
+AUTH_GOOGLE_ID=""
+AUTH_GOOGLE_SECRET=""
 ```
 
-When deploying to Vercel, add these same variables in **Project Settings → Environment Variables** (Production + Preview). `NEXTAUTH_URL` becomes your deployed URL.
+When deploying to Vercel, add these same variables in **Project Settings → Environment Variables** (Production + Preview). `AUTH_URL` is auto-detected from `VERCEL_URL` on Vercel — you can omit it there.
 
 ### Optional — only set these to enable the feature
 
@@ -208,8 +208,12 @@ MartialOps/
 │   │   ├── globals.css            # Tailwind 4 + design tokens (warm/cool themes)
 │   │   └── api/                   # API routes
 │   │       ├── auth/[...nextauth]/route.ts
-│   │       ├── sessions/route.ts          # POST/GET training sessions
-│   │       ├── checkins/route.ts          # POST/GET daily check-ins
+│   │       ├── sessions/route.ts             # POST/GET training sessions
+│   │       ├── sessions/[id]/route.ts        # DELETE/PATCH own session
+│   │       ├── checkins/route.ts             # POST/GET daily check-ins
+│   │       ├── checkins/[id]/route.ts        # DELETE/PATCH own check-in
+│   │       ├── memberships/me/route.ts       # DELETE leave gym (any member)
+│   │       ├── actions/active-gym.ts         # server action: setActiveGym
 │   │       ├── gyms/route.ts              # POST create gym
 │   │       ├── gyms/[id]/settings/route.ts       # GET/PUT gym multipliers
 │   │       ├── invite-codes/route.ts             # POST generate, GET list (coach/admin)
