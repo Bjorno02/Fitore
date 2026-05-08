@@ -28,7 +28,6 @@ export default function LoginPage() {
         <DoubleHeadedEagle size={280} color="var(--color-ink)" />
       </div>
 
-{/* Faint dot texture */}
       <DotGrid
         cols={16}
         rows={7}
@@ -48,8 +47,7 @@ export default function LoginPage() {
         <ThemeToggle />
       </div>
 
-      {/* ── Content ─────────────────────────────────────────── */}
-      <section className="mx-auto flex h-full max-w-6xl flex-col items-center justify-center px-6 pb-16 pt-40 text-center md:px-12 md:pb-20 md:pt-52">
+      <section className="mx-auto flex h-full max-w-6xl flex-col items-center justify-center px-5 pb-16 pt-40 text-center md:px-12 md:pb-20 md:pt-52">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -76,7 +74,6 @@ export default function LoginPage() {
           <span>§ 00 · Sign In</span>
         </motion.div>
 
-        {/* Stacked theatrical headline */}
         <h1
           className="gradient-text-ink max-w-full"
           style={{
@@ -127,7 +124,6 @@ export default function LoginPage() {
           </div>
         </h1>
 
-        {/* Sub-copy */}
         <motion.p
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -143,7 +139,6 @@ export default function LoginPage() {
           Your gym is waiting. Sign in with Google to pick up where you left off.
         </motion.p>
 
-        {/* Sign-in module */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -153,7 +148,7 @@ export default function LoginPage() {
           <button
             onClick={handleSignIn}
             disabled={loading}
-            className="group flex items-center justify-between border px-6 py-5 transition-all hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0"
+            className="group flex w-full items-center justify-between border px-6 py-4 transition-all hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0 md:py-5"
             style={{
               backgroundColor: "var(--color-canvas-raised)",
               borderColor: "var(--color-ink)",

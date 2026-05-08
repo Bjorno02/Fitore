@@ -32,22 +32,6 @@ function DiamondDivider() {
   )
 }
 
-function MonoEyebrow({ children }: { children: ReactNode }) {
-  return (
-    <span
-      style={{
-        fontFamily: "var(--font-mono)",
-        fontSize: "var(--text-eyebrow)",
-        letterSpacing: "var(--tracking-eyebrow)",
-        textTransform: "uppercase",
-        color: "var(--color-ink-muted)",
-      }}
-    >
-      {children}
-    </span>
-  )
-}
-
 function SectionBlock({
   number,
   roman,

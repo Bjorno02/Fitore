@@ -4,19 +4,17 @@ import prisma from "@/lib/prisma"
 import PageHeader from "@/components/PageHeader"
 import { DEFAULT_LOAD_CONFIG, DEFAULT_READINESS_CONFIG } from "@/lib/scoring"
 import SettingsForm from "./SettingsForm"
+import { getActiveGymContext } from "@/lib/active-gym"
 
 export default async function SettingsPage() {
   const session = await auth()
   if (!session?.user?.id) redirect("/login")
 
-  const membership = await prisma.membership.findFirst({
-    where: {
-      userId: session.user.id,
-      role: { in: ["COACH", "ADMIN"] },
-      status: "ACTIVE",
-    },
-    include: { gym: true },
-  })
+  const ctx = await getActiveGymContext(session.user.id)
+  const membership =
+    ctx && (ctx.active.role === "COACH" || ctx.active.role === "ADMIN")
+      ? ctx.active
+      : null
 
   if (!membership) redirect("/dashboard")
 
@@ -54,7 +52,7 @@ export default async function SettingsPage() {
         title="Settings"
         meta="Coach · Weights & Multipliers"
       />
-      <div className="mx-auto max-w-3xl px-6 pb-24 md:px-12">
+      <div className="mx-auto max-w-3xl px-5 pb-24 md:px-12">
         <SettingsForm gymId={membership.gymId} initial={initial} />
       </div>
     </main>

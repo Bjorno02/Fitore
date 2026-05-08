@@ -5,6 +5,8 @@ import prisma from "@/lib/prisma"
 import PageHeader from "@/components/PageHeader"
 import { calcLoad, calcReadiness, gymSettingsToConfig } from "@/lib/scoring"
 import { buildActivityDays } from "@/lib/history"
+import { getActiveGymContext } from "@/lib/active-gym"
+import HistoryActivityLog from "./HistoryActivityLog"
 
 const SESSION_TYPES = ["sparring", "drilling", "conditioning", "weights"] as const
 
@@ -12,13 +14,10 @@ export default async function AthleteHistoryPage() {
   const session = await auth()
   if (!session?.user?.id) redirect("/login")
 
-  const membership = await prisma.membership.findFirst({
-    where: { userId: session.user.id, status: "ACTIVE" },
-    include: { gym: true },
-  })
-  if (!membership) {
+  const ctx = await getActiveGymContext(session.user.id)
+  if (!ctx) {
     return (
-      <main className="mx-auto max-w-6xl px-6 py-24 md:px-12">
+      <main className="mx-auto max-w-6xl px-5 py-24 md:px-12">
         <p
           style={{
             fontFamily: "var(--font-mono)",
@@ -35,18 +34,19 @@ export default async function AthleteHistoryPage() {
   }
 
   const userId = session.user.id
-  const gymId = membership.gymId
+  const gymId = ctx.active.gymId
 
   const [sessions, checkIns, gymSettingsRow] = await Promise.all([
     prisma.trainingSession.findMany({
       where: { userId, gymId },
       orderBy: { createdAt: "desc" },
-      select: { duration: true, intensity: true, type: true, createdAt: true },
+      select: { id: true, duration: true, intensity: true, type: true, createdAt: true },
     }),
     prisma.checkIn.findMany({
       where: { userId, gymId },
       orderBy: { createdAt: "desc" },
       select: {
+        id: true,
         sleep: true,
         soreness: true,
         stress: true,
@@ -103,11 +103,11 @@ export default async function AthleteHistoryPage() {
   return (
     <main>
       <PageHeader
-        label={membership.gym.name}
+        label={ctx.active.gym.name}
         title="History"
         meta={session.user.name ?? undefined}
       />
-      <div className="mx-auto max-w-6xl px-6 pb-24 md:px-12">
+      <div className="mx-auto max-w-6xl px-5 pb-24 md:px-12">
         {/* Back link */}
         <div className="mb-12">
           <Link
@@ -382,125 +382,7 @@ export default async function AthleteHistoryPage() {
             </span>
           </div>
 
-          {days.length === 0 ? (
-            <p
-              className="py-12 text-center"
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "12px",
-                letterSpacing: "var(--tracking-label)",
-                textTransform: "uppercase",
-                color: "var(--color-ink-muted)",
-              }}
-            >
-              — No activity logged yet —
-            </p>
-          ) : (
-            <div>
-              {days.flatMap(([dateStr, entry]) => {
-                const display = new Date(dateStr + "T12:00:00Z").toLocaleDateString(
-                  "en-US",
-                  { month: "short", day: "numeric", year: "numeric" },
-                )
-                const checkInDetail = entry.checkIn
-                  ? `Sleep ${entry.checkIn.sleep} · Sore ${entry.checkIn.soreness}${entry.checkIn.injury ? " · Injury" : ""}`
-                  : null
-
-                if (entry.sessions.length === 0) {
-                  return [
-                    <div
-                      key={dateStr}
-                      className="border-b py-4"
-                      style={{ borderColor: "var(--color-rule)" }}
-                    >
-                      <div className="mb-1 flex items-baseline justify-between gap-4">
-                        <span
-                          style={{
-                            fontFamily: "var(--font-sans)",
-                            fontWeight: 600,
-                            fontSize: "16px",
-                            color: "var(--color-ink)",
-                          }}
-                        >
-                          {display}
-                        </span>
-                        <span
-                          style={{
-                            fontFamily: "var(--font-mono)",
-                            fontSize: "10px",
-                            letterSpacing: "0.2em",
-                            textTransform: "uppercase",
-                            color: "var(--color-ink-faint)",
-                          }}
-                        >
-                          Check-in only
-                        </span>
-                      </div>
-                      <p
-                        style={{
-                          fontFamily: "var(--font-mono)",
-                          fontSize: "11px",
-                          letterSpacing: "0.1em",
-                          textTransform: "uppercase",
-                          color: "var(--color-ink-muted)",
-                        }}
-                      >
-                        {checkInDetail}
-                      </p>
-                    </div>,
-                  ]
-                }
-
-                return entry.sessions.map((sess, i) => (
-                  <div
-                    key={`${dateStr}-${i}`}
-                    className="border-b py-4"
-                    style={{ borderColor: "var(--color-rule)" }}
-                  >
-                    <div className="mb-1 flex items-baseline justify-between gap-4">
-                      <span
-                        style={{
-                          fontFamily: "var(--font-sans)",
-                          fontWeight: 600,
-                          fontSize: "16px",
-                          color: "var(--color-ink)",
-                        }}
-                      >
-                        {display}
-                      </span>
-                      <span
-                        className="flex items-baseline gap-1.5 border px-2.5 py-1"
-                        style={{
-                          fontFamily: "var(--font-mono)",
-                          fontSize: "10px",
-                          letterSpacing: "0.2em",
-                          textTransform: "uppercase",
-                          color: "var(--color-accent)",
-                          borderColor: "var(--color-accent)",
-                          backgroundColor: "var(--color-accent-soft)",
-                        }}
-                      >
-                        {sess.type}
-                      </span>
-                    </div>
-                    <p
-                      style={{
-                        fontFamily: "var(--font-mono)",
-                        fontSize: "11px",
-                        letterSpacing: "0.1em",
-                        textTransform: "uppercase",
-                        color: "var(--color-ink-muted)",
-                      }}
-                    >
-                      {sess.duration}min · ×{sess.intensity}
-                      {i === 0 && checkInDetail ? ` · ${checkInDetail}` : ""}
-                      {i === 0 && !checkInDetail ? " · No check-in" : ""}
-                    </p>
-                  </div>
-                ))
-              })}
-            </div>
-          )}
+          <HistoryActivityLog days={days} />
         </section>
       </div>
     </main>

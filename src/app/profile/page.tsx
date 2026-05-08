@@ -1,21 +1,19 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import prisma from "@/lib/prisma"
 import { DoubleHeadedEagle, DotGrid } from "@/components/Ornaments"
 import LeaveGymButton from "./LeaveGymButton"
+import { getActiveGymContext } from "@/lib/active-gym"
 
 export default async function ProfilePage() {
   const session = await auth()
   if (!session?.user?.id) redirect("/login")
 
-  const membership = await prisma.membership.findFirst({
-    where: { userId: session.user.id },
-    include: { gym: true },
-  })
-  if (!membership) redirect("/onboarding")
+  const ctx = await getActiveGymContext(session.user.id)
+  if (!ctx) redirect("/onboarding")
 
-  const fileNo = membership.id.slice(-6).toUpperCase()
+  const fileNo = ctx.active.id.slice(-6).toUpperCase()
+  const memberships = ctx.all
 
   return (
     <main className="relative min-h-screen overflow-hidden">
@@ -42,7 +40,7 @@ export default async function ProfilePage() {
         }}
       />
 
-      <div className="mx-auto max-w-6xl px-6 md:px-12">
+      <div className="mx-auto max-w-6xl px-5 md:px-12">
         <div
           className="flex flex-wrap items-center justify-between gap-3 border-b py-4"
           style={{
@@ -62,7 +60,7 @@ export default async function ProfilePage() {
         </div>
       </div>
 
-      <section className="mx-auto max-w-6xl px-6 pb-12 pt-16 md:px-12 md:pt-20">
+      <section className="mx-auto max-w-6xl px-5 pb-12 pt-16 md:px-12 md:pt-20">
         <div
           className="mb-8 flex items-center gap-3"
           style={{
@@ -102,7 +100,7 @@ export default async function ProfilePage() {
         </h1>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 pb-24 md:px-12">
+      <section className="mx-auto max-w-6xl px-5 pb-24 md:px-12">
         <div
           className="mb-6 flex items-baseline justify-between border-b pb-3"
           style={{ borderColor: "var(--color-rule-strong)" }}
@@ -131,16 +129,118 @@ export default async function ProfilePage() {
           </span>
         </div>
 
-        <dl className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <dl className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Field label="Name" value={session.user.name ?? "—"} />
           <Field label="Email" value={session.user.email ?? "—"} />
-          <Field label="Gym" value={membership.gym.name} />
         </dl>
 
-        <div className="mt-12 flex flex-wrap gap-4">
+        <div
+          className="mt-16 mb-6 flex items-baseline justify-between border-b pb-3"
+          style={{ borderColor: "var(--color-rule-strong)" }}
+        >
+          <span
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "var(--text-eyebrow)",
+              letterSpacing: "var(--tracking-eyebrow)",
+              textTransform: "uppercase",
+              color: "var(--color-ink-muted)",
+            }}
+          >
+            <span style={{ color: "var(--color-accent)" }}>§ 02</span> Memberships
+          </span>
+          <span
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "var(--text-eyebrow)",
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              color: "var(--color-ink-faint)",
+            }}
+          >
+            {memberships.length} active
+          </span>
+        </div>
+
+        <div className="flex flex-col">
+          {memberships.map((m) => (
+            <div
+              key={m.gymId}
+              className="border-b py-5"
+              style={{ borderColor: "var(--color-rule)" }}
+            >
+              <div className="mb-4 flex items-center justify-between gap-4">
+                <span
+                  style={{
+                    fontFamily: "var(--font-sans)",
+                    fontSize: "18px",
+                    fontWeight: 600,
+                    color: "var(--color-ink)",
+                  }}
+                >
+                  {m.gym.name}
+                  {m.gymId === ctx.active.gymId && (
+                    <span
+                      style={{
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "10px",
+                        letterSpacing: "var(--tracking-label)",
+                        textTransform: "uppercase",
+                        color: "var(--color-accent)",
+                        marginLeft: "10px",
+                      }}
+                    >
+                      · Active
+                    </span>
+                  )}
+                </span>
+                <span
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "11px",
+                    letterSpacing: "var(--tracking-label)",
+                    textTransform: "uppercase",
+                    color:
+                      m.role === "ADMIN"
+                        ? "var(--color-accent)"
+                        : "var(--color-ink-muted)",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {m.role}
+                </span>
+              </div>
+              <LeaveGymButton gymId={m.gymId} gymName={m.gym.name} />
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-10 flex flex-wrap gap-4">
+          <Link
+            href="/onboarding"
+            className="group inline-flex items-center gap-3 border px-5 py-3.5 transition-all hover:-translate-y-0.5"
+            style={{
+              backgroundColor: "var(--color-accent)",
+              borderColor: "var(--color-accent-hover)",
+              color: "var(--color-accent-ink)",
+              fontFamily: "var(--font-mono)",
+              fontSize: "12px",
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "var(--tracking-label)",
+            }}
+          >
+            <span>+ Join Another Gym</span>
+            <span
+              aria-hidden="true"
+              className="transition-transform group-hover:translate-x-1"
+            >
+              →
+            </span>
+          </Link>
           <Link
             href="/"
-            className="group inline-flex items-center gap-3 border px-5 py-3 transition-all hover:-translate-y-0.5"
+            className="group inline-flex items-center gap-3 border px-5 py-3.5 transition-all hover:-translate-y-0.5"
             style={{
               borderColor: "var(--color-ink)",
               color: "var(--color-ink)",
@@ -161,8 +261,6 @@ export default async function ProfilePage() {
             </span>
           </Link>
         </div>
-
-        <LeaveGymButton gymId={membership.gymId} gymName={membership.gym.name} />
       </section>
     </main>
   )

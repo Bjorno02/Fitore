@@ -1,4 +1,3 @@
-import { type ReactNode } from "react"
 import { DotGrid, DoubleHeadedEagle } from "@/components/Ornaments"
 
 type WarmVariant = {

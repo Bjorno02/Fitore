@@ -6,23 +6,21 @@ import PageHeader from "@/components/PageHeader"
 import CalendarPanel from "./CalendarPanel"
 import InviteCodesPanel from "./InviteCodesPanel"
 import MembersPanel from "./MembersPanel"
+import { getActiveGymContext } from "@/lib/active-gym"
 
 export default async function DashboardPage() {
   const session = await auth()
   if (!session?.user?.id) redirect("/login")
 
-  const membership = await prisma.membership.findFirst({
-    where: {
-      userId: session.user.id,
-      role: { in: ["COACH", "ADMIN"] },
-      status: "ACTIVE",
-    },
-    include: { gym: true },
-  })
+  const ctx = await getActiveGymContext(session.user.id)
+  const membership =
+    ctx && (ctx.active.role === "COACH" || ctx.active.role === "ADMIN")
+      ? ctx.active
+      : null
 
   if (!membership) {
     return (
-      <main className="mx-auto max-w-6xl px-6 py-24 md:px-12">
+      <main className="mx-auto max-w-6xl px-5 py-24 md:px-12">
         <p
           style={{
             fontFamily: "var(--font-mono)",
@@ -32,7 +30,7 @@ export default async function DashboardPage() {
             color: "var(--color-ink-muted)",
           }}
         >
-          — You are not a coach at any gym —
+          — You are not a coach at this gym —
         </p>
       </main>
     )
@@ -66,7 +64,7 @@ export default async function DashboardPage() {
   return (
     <main>
       <PageHeader label="Coach Dashboard" title={membership.gym.name} />
-      <div className="mx-auto max-w-6xl px-6 pb-24 md:px-12">
+      <div className="mx-auto max-w-6xl px-5 pb-24 md:px-12">
         {/* Stat strip + settings shortcut */}
         <section className="mb-16 grid grid-cols-1 gap-8 md:grid-cols-[1fr_auto]">
           <div

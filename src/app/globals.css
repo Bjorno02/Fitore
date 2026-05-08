@@ -170,6 +170,32 @@
   }
 }
 
+/* ─── mobile ─── */
+
+@media (hover: none) {
+  /* don't stick post-tap on touch */
+  .group:hover .group-hover\:translate-x-1,
+  .group:hover .group-hover\:translate-x-0\.5,
+  .group:hover .group-hover\:scale-x-100,
+  .group:hover .group-hover\:opacity-100 {
+    transform: none;
+    opacity: inherit;
+  }
+
+  .hover\:-translate-y-0\.5:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 768px) {
+  /* prevent ios zoom-on-focus */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
 /* ─── Base layer — wrapped so cool-mode overrides (also in @layer base) can win ─── */
 @layer base {
   html, body { min-height: 100%; }

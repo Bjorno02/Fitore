@@ -5,7 +5,7 @@
     if (t === "cool") {
       document.documentElement.setAttribute("data-theme", "cool");
     }
-  } catch (e) {
+  } catch {
     /* localStorage may be disabled; fall through to default (warm) */
   }
 })();
