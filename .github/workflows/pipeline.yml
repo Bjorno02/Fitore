@@ -39,7 +39,6 @@ jobs:
 
   unit:
     name: Unit Tests
-    needs: build
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
@@ -57,7 +56,7 @@ jobs:
 
   e2e:
     name: End-to-End Tests
-    needs: unit
+    needs: [build, unit]
     runs-on: ubuntu-latest
     services:
       postgres:
