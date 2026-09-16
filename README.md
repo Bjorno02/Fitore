@@ -293,8 +293,12 @@ Typographic system uses Barlow (display, 800) for brutalist headings and Jakarta
 `.github/workflows/pipeline.yml` is a single chained workflow, so the Actions run page draws it as one graph:
 
 ```
-App Build → Unit Tests → End-to-End Tests → Migrate → Deploy Production → Smoke Test
+App Build  ─┐
+            ├─→ End-to-End Tests → Migrate → Deploy Production → Smoke Test
+Unit Tests ─┘
 ```
+
+App Build and Unit Tests run in parallel; everything after waits for both.
 
 Runs on every pull request, every push to `main`, and `workflow_dispatch`.
 
