@@ -118,7 +118,7 @@ Schema lives at `prisma/schema.prisma`. The generated client is output to `src/g
 
 ```bash
 npx prisma migrate dev --name <short-description>   # create + apply new migration in dev
-npx prisma migrate deploy                           # apply pending migrations (used in Vercel build)
+npx prisma migrate deploy                           # apply pending migrations (CI runs this in the Migrate stage)
 npx prisma studio                                   # visual DB browser
 npx tsx prisma/seed.ts                              # seed dev user + gym
 ```
@@ -132,7 +132,7 @@ Migration history is committed under `prisma/migrations/` — do not delete or r
 | Command | What it does |
 |---|---|
 | `npm run dev` | Start Next.js dev server |
-| `npm run build` | Run `prisma migrate deploy` then `next build` (used by Vercel) |
+| `npm run build` | `next build` only; migrations run in the pipeline's Migrate stage |
 | `npm start` | Start the production build locally |
 | `npm run lint` | Run ESLint |
 | `npm test` | Run Vitest once |
@@ -283,7 +283,7 @@ Typographic system uses Barlow (display, 800) for brutalist headings and Jakarta
 5. Connect a Postgres provider (Neon, Supabase, Vercel Postgres, Railway, etc.) and use its connection string as `DATABASE_URL`.
 6. Deploy.
 
-**First deploy** runs `prisma migrate deploy` (applies the 7 committed migrations) before `next build`. Subsequent deploys apply any new migrations automatically. If a migration fails, the build fails — the bad code never reaches production.
+**Migrations** are not part of the build. The pipeline's Migrate stage runs `prisma migrate deploy` after the tests pass and before Deploy Production, so a failing migration blocks the deploy and the bad code never reaches production. The build itself never opens a database connection.
 
 ---
 
@@ -292,22 +292,47 @@ Typographic system uses Barlow (display, 800) for brutalist headings and Jakarta
 `.github/workflows/pipeline.yml` is a single chained workflow, so the Actions run page draws it as one graph:
 
 ```
-App Build → Unit Tests → End-to-End Tests → Deploy Production
+App Build → Unit Tests → End-to-End Tests → Migrate → Deploy Production
 ```
 
 Runs on every pull request, every push to `main`, and `workflow_dispatch`.
 
-1. **App Build** — `vercel pull` + `vercel build` (Preview env on PRs, Production env on `main`), then uploads `.vercel/output` as a run artifact. This is the exact build that gets deployed.
+1. **App Build** — `vercel pull` + `vercel build` (Preview env on PRs, Production env on `main`), then uploads `.vercel/output` as a run artifact. This is the exact build that gets deployed. The build never connects to a database.
 2. **Unit Tests** — `prisma generate`, `tsc --noEmit`, `eslint`, `vitest`.
 3. **End-to-End Tests** — Postgres 16 service, `prisma migrate deploy`, Chromium, Playwright suites.
-4. **Deploy Production** — push to `main` only. Downloads the artifact and runs `vercel deploy --prebuilt --prod` under the `production` GitHub environment, so the run summary links the live deployment.
+4. **Migrate** — `prisma migrate deploy` against the `preview` Neon branch on PRs and the `production` branch on `main`. The connection string comes from a GitHub environment secret, so Vercel's own `DATABASE_URL` can stay type Secret.
+5. **Deploy Production** — push to `main` only. Downloads the artifact and runs `vercel deploy --prebuilt --prod` under the `production` GitHub environment, so the run summary links the live deployment.
 
-PRs stop after step 3. In-progress PR runs are cancelled by a newer push to the same branch; runs on `main` are never cancelled mid-deploy.
+PRs stop after Migrate. In-progress PR runs are cancelled by a newer push to the same branch; runs on `main` are never cancelled mid-deploy.
 
-### Required repo secrets
+### Required GitHub secrets
+
+Repository secrets (Settings → Secrets and variables → Actions):
 
 | Secret | Source |
 |---|---|
+| `VERCEL_TOKEN` | Vercel → Account Settings → Tokens, scope Full Account |
+| `VERCEL_ORG_ID` | `.vercel/project.json` → `orgId` after `vercel link` |
+| `VERCEL_PROJECT_ID` | `.vercel/project.json` → `projectId` after `vercel link` |
+
+Environment secrets (Settings → Environments), one per environment, both named `DATABASE_URL`:
+
+| Environment | Value |
+|---|---|
+| `preview` | connection string of the Neon `preview` branch |
+| `production` | connection string of the Neon `production` branch |
+
+### Vercel
+
+`vercel.json` sets `git.deploymentEnabled.main = false` so Vercel's own integration no longer deploys `main` on push; the pipeline is the only path to production. Preview deploys for other branches are unchanged.
+
+Vercel's `DATABASE_URL` is read only at runtime, so keep it type **Secret**. Preview and Production must point at different Neon branches; the pipeline migrates each one separately.
+
+### Branch protection
+
+Require the `App Build`, `Unit Tests`, `End-to-End Tests`, and `Migrate` checks on `main` so a PR cannot merge until they pass.
+
+---|---|
 | `VERCEL_TOKEN` | Vercel → Account Settings → Tokens |
 | `VERCEL_ORG_ID` | `.vercel/project.json` → `orgId` after `vercel link` |
 | `VERCEL_PROJECT_ID` | `.vercel/project.json` → `projectId` after `vercel link` |

@@ -88,9 +88,26 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
 
+  migrate:
+    name: Migrate
+    needs: e2e
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma migrate deploy
+
   deploy-production:
     name: Deploy Production
-    needs: e2e
+    needs: migrate
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
