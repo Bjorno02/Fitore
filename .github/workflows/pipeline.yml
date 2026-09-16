@@ -27,8 +27,10 @@ jobs:
           cache: npm
       - run: npm install -g vercel@59
       - run: vercel pull --yes --environment=$TARGET_ENV --token=${{ secrets.VERCEL_TOKEN }}
-      # secret vars pull as placeholder
-      - run: sed -i '/="\[SENSITIVE\]"$/d' .vercel/.env.$TARGET_ENV.local
+      # secret vars pull as placeholder; prisma generate needs some url
+      - run: |
+          sed -i '/="\[SENSITIVE\]"$/d' .vercel/.env.$TARGET_ENV.local
+          echo 'DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy' >> .vercel/.env.$TARGET_ENV.local
       - env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         if: env.SENTRY_AUTH_TOKEN != ''

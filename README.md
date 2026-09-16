@@ -297,7 +297,7 @@ App Build → Unit Tests → End-to-End Tests → Migrate → Deploy Production 
 
 Runs on every pull request, every push to `main`, and `workflow_dispatch`.
 
-1. **App Build** — `vercel pull` + `vercel build` (Preview env on PRs, Production env on `main`), then uploads `.vercel/output` as a run artifact. This is the exact build that gets deployed. Secret-type Vercel variables arrive from `vercel pull` as the placeholder `[SENSITIVE]`, so the job strips those lines before building; every build-time consumer (Upstash client, Sentry upload) must tolerate the variable being unset. Runtime on Vercel still gets the real values. The build never connects to a database.
+1. **App Build** — `vercel pull` + `vercel build` (Preview env on PRs, Production env on `main`), then uploads `.vercel/output` as a run artifact. This is the exact build that gets deployed. Secret-type Vercel variables arrive from `vercel pull` as the placeholder `[SENSITIVE]`, so the job strips those lines before building and sets a dummy `DATABASE_URL` because `prisma generate` refuses to run without one; every build-time consumer (Upstash client, Sentry upload) must tolerate the variable being unset. Runtime on Vercel still gets the real values. The build never connects to a database.
 2. **Unit Tests** — `prisma generate`, `tsc --noEmit`, `eslint`, `vitest`.
 3. **End-to-End Tests** — Postgres 16 service, `prisma migrate deploy`, Chromium, Playwright suites.
 4. **Migrate** — `prisma migrate deploy` against the `preview` Neon branch on PRs and the `production` branch on `main`. The connection string comes from a GitHub environment secret, so Vercel's own `DATABASE_URL` can stay type Secret.
