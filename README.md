@@ -287,27 +287,40 @@ Typographic system uses Barlow (display, 800) for brutalist headings and Jakarta
 
 ---
 
-## CI
+## CI/CD
 
-Two workflows run on every pull request and every push to `main`:
+`.github/workflows/pipeline.yml` is a single chained workflow, so the Actions run page draws it as one graph:
 
-**`ci.yml`** (job `check`):
+```
+App Build → Unit Tests → End-to-End Tests → Deploy Production
+```
 
-1. `npm ci`
-2. `npx prisma generate`
-3. `npx tsc --noEmit`
-4. `npm run lint`
-5. `npm test`
+Runs on every pull request, every push to `main`, and `workflow_dispatch`.
 
-**`e2e.yml`** (job `e2e`): starts a Postgres 16 service, runs `prisma migrate deploy`, installs Chromium, and runs the Playwright suites. Also available via `workflow_dispatch`.
+1. **App Build** — `vercel pull` + `vercel build` (Preview env on PRs, Production env on `main`), then uploads `.vercel/output` as a run artifact. This is the exact build that gets deployed.
+2. **Unit Tests** — `prisma generate`, `tsc --noEmit`, `eslint`, `vitest`.
+3. **End-to-End Tests** — Postgres 16 service, `prisma migrate deploy`, Chromium, Playwright suites.
+4. **Deploy Production** — push to `main` only. Downloads the artifact and runs `vercel deploy --prebuilt --prod` under the `production` GitHub environment, so the run summary links the live deployment.
 
-Both use a `concurrency` group keyed on the ref, so a new push to the same branch or PR cancels the stale run.
+PRs stop after step 3. In-progress PR runs are cancelled by a newer push to the same branch; runs on `main` are never cancelled mid-deploy.
 
-Vercel handles `next build` on deploy; CI intentionally skips it to avoid redundant work.
+### Required repo secrets
 
-### Deploy gate
+| Secret | Source |
+|---|---|
+| `VERCEL_TOKEN` | Vercel → Account Settings → Tokens |
+| `VERCEL_ORG_ID` | `.vercel/project.json` → `orgId` after `vercel link` |
+| `VERCEL_PROJECT_ID` | `.vercel/project.json` → `projectId` after `vercel link` |
 
-Vercel deploys through its Git integration and does not wait for GitHub Actions, so the gate is branch protection on `main`: require a pull request before merging, and require the `check` and `e2e` status checks to pass with the branch up to date. `main` then only moves by a green PR, and the production deploy only ever sees tested code. Preview deploys for `development` and PR branches are unaffected.
+### Vercel Git integration
+
+`vercel.json` sets `git.deploymentEnabled.main = false` so Vercel's own integration no longer deploys `main` on push; the pipeline is the only path to production. Preview deploys for other branches are unchanged.
+
+`vercel build` runs `npm run build`, which runs `prisma migrate deploy` against the pulled environment's `DATABASE_URL`. That is the same behavior Vercel had, but PR builds now pull the **Preview** environment, so make sure Preview does not point at the production database.
+
+### Branch protection
+
+Require the `App Build`, `Unit Tests`, and `End-to-End Tests` checks on `main` so a PR cannot merge until they pass.
 
 ---
 
