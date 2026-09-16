@@ -123,18 +123,27 @@ jobs:
       url: ${{ steps.deploy.outputs.url }}
     outputs:
       url: ${{ steps.deploy.outputs.url }}
+    env:
+      DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
+      # prebuilt output references project node_modules
+      - run: npm ci
       - run: npm install -g vercel@59
       - uses: actions/download-artifact@v4
         with:
           name: vercel-output
           path: .vercel/output
       - id: deploy
-        run: echo "url=$(vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }})" >> "$GITHUB_OUTPUT"
+        run: |
+          set -o pipefail
+          url=$(vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }} | tee /dev/stderr | tail -n1)
+          [ -n "$url" ] || { echo "vercel deploy printed no url"; exit 1; }
+          echo "url=$url" >> "$GITHUB_OUTPUT"
 
   smoke:
     name: Smoke Test
