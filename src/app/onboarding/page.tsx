@@ -9,7 +9,7 @@ const REDEEM_ERRORS: Record<string, string> = {
   invalid_code: "We don't recognize that code.",
   expired: "That code has expired.",
   exhausted: "That code is fully used.",
-  revoked: "That code was revoked.",
+  revoked: "That code has been revoked.",
   already_member: "You're already in this gym.",
 }
 
