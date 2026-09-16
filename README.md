@@ -292,16 +292,17 @@ Typographic system uses Barlow (display, 800) for brutalist headings and Jakarta
 `.github/workflows/pipeline.yml` is a single chained workflow, so the Actions run page draws it as one graph:
 
 ```
-App Build → Unit Tests → End-to-End Tests → Migrate → Deploy Production
+App Build → Unit Tests → End-to-End Tests → Migrate → Deploy Production → Smoke Test
 ```
 
 Runs on every pull request, every push to `main`, and `workflow_dispatch`.
 
-1. **App Build** — `vercel pull` + `vercel build` (Preview env on PRs, Production env on `main`), then uploads `.vercel/output` as a run artifact. This is the exact build that gets deployed. The build never connects to a database.
+1. **App Build** — `vercel pull` + `vercel build` (Preview env on PRs, Production env on `main`), then uploads `.vercel/output` as a run artifact. This is the exact build that gets deployed. Secret-type Vercel variables arrive from `vercel pull` as the placeholder `[SENSITIVE]`, so the job strips those lines before building; every build-time consumer (Upstash client, Sentry upload) must tolerate the variable being unset. Runtime on Vercel still gets the real values. The build never connects to a database.
 2. **Unit Tests** — `prisma generate`, `tsc --noEmit`, `eslint`, `vitest`.
 3. **End-to-End Tests** — Postgres 16 service, `prisma migrate deploy`, Chromium, Playwright suites.
 4. **Migrate** — `prisma migrate deploy` against the `preview` Neon branch on PRs and the `production` branch on `main`. The connection string comes from a GitHub environment secret, so Vercel's own `DATABASE_URL` can stay type Secret.
 5. **Deploy Production** — push to `main` only. Downloads the artifact and runs `vercel deploy --prebuilt --prod` under the `production` GitHub environment, so the run summary links the live deployment.
+6. **Smoke Test** — hits the deployment URL: `/` must return 200 (retried for up to a minute while the deployment warms), and `POST /api/sessions` and `GET /api/dashboard/summary` must return 401 without a session. Catches a bad runtime env var, a dead database connection, or an init crash. If it fails, `vercel rollback` restores the previous production deployment.
 
 PRs stop after Migrate. In-progress PR runs are cancelled by a newer push to the same branch; runs on `main` are never cancelled mid-deploy.
 
@@ -314,6 +315,7 @@ Repository secrets (Settings → Secrets and variables → Actions):
 | `VERCEL_TOKEN` | Vercel → Account Settings → Tokens, scope Full Account |
 | `VERCEL_ORG_ID` | `.vercel/project.json` → `orgId` after `vercel link` |
 | `VERCEL_PROJECT_ID` | `.vercel/project.json` → `projectId` after `vercel link` |
+| `SENTRY_AUTH_TOKEN` | optional; Sentry → Settings → Auth Tokens. Without it the build still passes but skips source-map upload |
 
 Environment secrets (Settings → Environments), one per environment, both named `DATABASE_URL`:
 
