@@ -67,5 +67,6 @@ CLAUDE.md
 
 # test artifacts + AI tooling
 /test-results/
+/playwright-report/
 .agents/
 skills-lock.json
