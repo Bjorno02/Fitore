@@ -184,7 +184,8 @@ Authenticated-flow coverage (signup → onboard → log session → view history
 MartialOps/
 ├── .github/
 │   └── workflows/
-│       └── ci.yml                 # lint + type-check + vitest on PR + push to main
+│       └── pipeline.yml           # build → unit → e2e → migrate → deploy → smoke (see CI/CD)
+├── vercel.json                    # disables Vercel's own deploys of main; the pipeline deploys production
 ├── docker-compose.yml             # local Postgres 16 on :5432
 ├── docs/                          # (gitignored) local dev notes
 ├── prisma/
@@ -279,9 +280,9 @@ Typographic system uses Barlow (display, 800) for brutalist headings and Jakarta
 1. Push the repo to GitHub.
 2. In Vercel, **Import Project** and select the repo.
 3. Framework preset auto-detects Next.js — no override needed.
-4. Add the environment variables from the [Environment variables](#environment-variables) section.
-5. Connect a Postgres provider (Neon, Supabase, Vercel Postgres, Railway, etc.) and use its connection string as `DATABASE_URL`.
-6. Deploy.
+4. Add the environment variables from the [Environment variables](#environment-variables) section. `DATABASE_URL` can be type **Secret**; nothing reads it at build time.
+5. Create a Neon project with two branches, `production` and `preview`, and set `DATABASE_URL` per Vercel environment so Preview never touches production data.
+6. Set up the GitHub secrets and environments listed under [CI/CD](#cicd). Production is deployed by the pipeline on push to `main`; Vercel's own Git integration only builds previews for other branches, because `vercel.json` disables it for `main`.
 
 **Migrations** are not part of the build. The pipeline's Migrate stage runs `prisma migrate deploy` after the tests pass and before Deploy Production, so a failing migration blocks the deploy and the bad code never reaches production. The build itself never opens a database connection.
 
@@ -333,21 +334,6 @@ Vercel's `DATABASE_URL` is read only at runtime, so keep it type **Secret**. Pre
 ### Branch protection
 
 Require the `App Build`, `Unit Tests`, `End-to-End Tests`, and `Migrate` checks on `main` so a PR cannot merge until they pass.
-
----|---|
-| `VERCEL_TOKEN` | Vercel → Account Settings → Tokens |
-| `VERCEL_ORG_ID` | `.vercel/project.json` → `orgId` after `vercel link` |
-| `VERCEL_PROJECT_ID` | `.vercel/project.json` → `projectId` after `vercel link` |
-
-### Vercel Git integration
-
-`vercel.json` sets `git.deploymentEnabled.main = false` so Vercel's own integration no longer deploys `main` on push; the pipeline is the only path to production. Preview deploys for other branches are unchanged.
-
-`vercel build` runs `npm run build`, which runs `prisma migrate deploy` against the pulled environment's `DATABASE_URL`. That is the same behavior Vercel had, but PR builds now pull the **Preview** environment, so make sure Preview does not point at the production database.
-
-### Branch protection
-
-Require the `App Build`, `Unit Tests`, and `End-to-End Tests` checks on `main` so a PR cannot merge until they pass.
 
 ---
 
