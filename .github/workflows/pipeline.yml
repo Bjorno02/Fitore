@@ -42,6 +42,15 @@ jobs:
           path: .vercel/output
           include-hidden-files: true
           retention-days: 1
+      # prebuilt output references .next and node_modules by path
+      - uses: actions/upload-artifact@v4
+        with:
+          name: next-build
+          path: |
+            .next
+            !.next/cache
+          include-hidden-files: true
+          retention-days: 1
 
   unit:
     name: Unit Tests
@@ -131,13 +140,16 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      # prebuilt output references project node_modules
       - run: npm ci
       - run: npm install -g vercel@59
       - uses: actions/download-artifact@v4
         with:
           name: vercel-output
           path: .vercel/output
+      - uses: actions/download-artifact@v4
+        with:
+          name: next-build
+          path: .next
       - id: deploy
         run: |
           set -o pipefail
