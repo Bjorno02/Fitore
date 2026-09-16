@@ -289,7 +289,9 @@ Typographic system uses Barlow (display, 800) for brutalist headings and Jakarta
 
 ## CI
 
-`.github/workflows/ci.yml` runs on every pull request and every push to `main`:
+Two workflows run on every pull request and every push to `main`:
+
+**`ci.yml`** (job `check`):
 
 1. `npm ci`
 2. `npx prisma generate`
@@ -297,7 +299,15 @@ Typographic system uses Barlow (display, 800) for brutalist headings and Jakarta
 4. `npm run lint`
 5. `npm test`
 
-Vercel handles `next build` on deploy; CI intentionally skips it to avoid redundant work. Playwright is **not** in CI yet — running it requires a Postgres service in the workflow + browser binaries. See the dev notes for the trade-off and decision options.
+**`e2e.yml`** (job `e2e`): starts a Postgres 16 service, runs `prisma migrate deploy`, installs Chromium, and runs the Playwright suites. Also available via `workflow_dispatch`.
+
+Both use a `concurrency` group keyed on the ref, so a new push to the same branch or PR cancels the stale run.
+
+Vercel handles `next build` on deploy; CI intentionally skips it to avoid redundant work.
+
+### Deploy gate
+
+Vercel deploys through its Git integration and does not wait for GitHub Actions, so the gate is branch protection on `main`: require a pull request before merging, and require the `check` and `e2e` status checks to pass with the branch up to date. `main` then only moves by a green PR, and the production deploy only ever sees tested code. Preview deploys for `development` and PR branches are unaffected.
 
 ---
 
