@@ -184,7 +184,7 @@ Authenticated-flow coverage (signup → onboard → log session → view history
 MartialOps/
 ├── .github/
 │   └── workflows/
-│       └── pipeline.yml           # build → unit → e2e → migrate → deploy → smoke (see CI/CD)
+│       └── pipeline.yml           # build+deploy candidate ∥ unit → e2e → migrate → smoke → promote (see CI/CD)
 ├── vercel.json                    # disables Vercel's own deploys of main; the pipeline deploys production
 ├── docker-compose.yml             # local Postgres 16 on :5432
 ├── docs/                          # (gitignored) local dev notes
@@ -284,32 +284,32 @@ Typographic system uses Barlow (display, 800) for brutalist headings and Jakarta
 5. Create a Neon project with two branches, `production` and `preview`, and set `DATABASE_URL` per Vercel environment so Preview never touches production data.
 6. Set up the GitHub secrets and environments listed under [CI/CD](#cicd). Production is deployed by the pipeline on push to `main`; Vercel's own Git integration only builds previews for other branches, because `vercel.json` disables it for `main`.
 
-**Migrations** are not part of the build. The pipeline's Migrate stage runs `prisma migrate deploy` after the tests pass and before Deploy Production, so a failing migration blocks the deploy and the bad code never reaches production. The build itself never opens a database connection.
+**Migrations** are not part of the build. The pipeline's Migrate stage runs `prisma migrate deploy` after the tests pass and before the candidate deployment is smoke-tested and promoted, so a failing migration blocks the promotion and the bad code never reaches production. The build itself never opens a database connection.
 
 ---
 
 ## CI/CD
 
-`.github/workflows/pipeline.yml` is a single chained workflow, so the Actions run page draws it as one graph:
+`.github/workflows/pipeline.yml` is a single workflow. On a push to `main` the Actions run page draws it as:
 
 ```
-App Build  ─┐
-            ├─→ End-to-End Tests → Migrate → Deploy Production → Smoke Test
-Unit Tests ─┘
+Build & Deploy Candidate ─┐
+                          ├─→ End-to-End Tests → Migrate → Smoke Test → Promote to Production
+Unit Tests ───────────────┘
 ```
 
-App Build and Unit Tests run in parallel; everything after waits for both.
+On a pull request the first box is called App Build and the run stops after Migrate.
 
-Runs on every pull request, every push to `main`, and `workflow_dispatch`.
+The shape is deploy-then-promote: the app is built exactly once, deployed to Vercel as a production-target deployment that receives no traffic, verified in place, and only then does the production domain move to it. If verification fails, production is untouched and there is nothing to roll back.
 
-1. **App Build** — `vercel pull` + `vercel build` (Preview env on PRs, Production env on `main`) as a compile check. Secret-type Vercel variables arrive from `vercel pull` as the placeholder `[SENSITIVE]`, so the job strips those lines before building and sets a dummy `DATABASE_URL` because `prisma generate` refuses to run without one; every build-time consumer (Upstash client, Sentry upload) must tolerate the variable being unset. Runtime on Vercel still gets the real values. The build never connects to a database.
-2. **Unit Tests** — `prisma generate`, `tsc --noEmit`, `eslint`, `vitest`.
+1. **Build & Deploy Candidate** (`App Build` on PRs) — `vercel pull` + `vercel build`. Secret-type Vercel variables arrive from `vercel pull` as the placeholder `[SENSITIVE]`, so the job strips those lines before building and sets a dummy `DATABASE_URL` because `prisma generate` refuses to run without one; every build-time consumer (Upstash client, Sentry upload) must tolerate the variable being unset. Runtime on Vercel still gets the real values. The build never connects to a database. On `main` the job then runs `vercel deploy --prebuilt --prod --skip-domain`, which uploads the build as a production deployment without pointing `fitore.vercel.app` at it, and passes the deployment URL to later jobs. On PRs it is a compile check only.
+2. **Unit Tests** — `prisma generate`, `tsc --noEmit`, `eslint`, `vitest`. Runs in parallel with the build.
 3. **End-to-End Tests** — Postgres 16 service, `prisma migrate deploy`, Chromium, Playwright suites. On failure the job uploads a `playwright-report` artifact (HTML report plus traces and screenshots of the failing tests, kept 7 days); download it from the run's Summary page and open `index.html`, or run `npx playwright show-report <folder>`.
 4. **Migrate** — `prisma migrate deploy` against the `preview` Neon branch on PRs and the `production` branch on `main`. The connection string comes from a GitHub environment secret, so Vercel's own `DATABASE_URL` can stay type Secret.
-5. **Deploy Production** — push to `main` only. Pulls the Production env, runs `vercel build --prod`, and deploys that output with `vercel deploy --prebuilt --prod`, all on one runner. Vercel's prebuilt output for Next.js references files in `.next` and `node_modules` by path, including build-generated shims, so it is not portable between machines; an earlier version of this pipeline that shipped it as an artifact deployed a build whose Sentry instrumentation could not load (2026-09-16). Runs under the `production` GitHub environment.
-6. **Smoke Test** — hits `https://fitore.vercel.app`, the production domain, not the per-deployment URL (those sit behind Vercel Deployment Protection and redirect to Vercel SSO). `/login` must return 200 (retried for up to a minute while the deployment warms), `/` must 307 to `/login` for a signed-out visitor, and `POST /api/sessions` and `GET /api/dashboard/summary` must return 401. Catches a bad runtime env var, a dead database connection, or an init crash. If it fails, `vercel rollback <previous-deployment-url>` restores the previous production deployment; the bare `vercel rollback` did nothing when tried.
+5. **Smoke Test** (`main` only) — hits the candidate deployment URL with the Deployment Protection bypass header. `/login` must return 200 (retried for up to a minute while the deployment warms), `/` must 307 to `/login` for a signed-out visitor, and `POST /api/sessions` and `GET /api/dashboard/summary` must return 401. This is the deployed build with its real runtime environment and the freshly migrated production database, checked before any user can reach it.
+6. **Promote to Production** (`main` only) — `vercel promote <candidate-url>`. Moves `fitore.vercel.app` to the verified deployment in seconds, with no rebuild, then confirms the domain answers. Runs under the `production` GitHub environment.
 
-PRs stop after Migrate. In-progress PR runs are cancelled by a newer push to the same branch; runs on `main` are never cancelled mid-deploy.
+In-progress PR runs are cancelled by a newer push to the same branch; runs on `main` are never cancelled.
 
 ### Required GitHub secrets
 
@@ -320,6 +320,7 @@ Repository secrets (Settings → Secrets and variables → Actions):
 | `VERCEL_TOKEN` | Vercel → Account Settings → Tokens, scope Full Account |
 | `VERCEL_ORG_ID` | `.vercel/project.json` → `orgId` after `vercel link` |
 | `VERCEL_PROJECT_ID` | `.vercel/project.json` → `projectId` after `vercel link` |
+| `VERCEL_AUTOMATION_BYPASS_SECRET` | Vercel → Project Settings → Deployment Protection → Protection Bypass for Automation. Lets the smoke test reach the candidate URL, which is otherwise behind Vercel SSO |
 | `SENTRY_AUTH_TOKEN` | optional; Sentry → Settings → Auth Tokens. Without it the build still passes but skips source-map upload |
 
 Environment secrets (Settings → Environments), one per environment, both named `DATABASE_URL`:
@@ -334,6 +335,17 @@ Environment secrets (Settings → Environments), one per environment, both named
 `vercel.json` sets `git.deploymentEnabled.main = false` so Vercel's own integration no longer deploys `main` on push; the pipeline is the only path to production. Preview deploys for other branches are unchanged.
 
 Vercel's `DATABASE_URL` is read only at runtime, so keep it type **Secret**. Preview and Production must point at different Neon branches; the pipeline migrates each one separately.
+
+### Rolling back
+
+Rarely needed, since a candidate that fails its smoke test is never promoted. If something slips through anyway:
+
+```
+vercel ls fitore --prod              # find the previous Ready deployment
+vercel rollback <that-url> --yes     # re-point the domain at it
+```
+
+Name the deployment; the bare `vercel rollback` did nothing when tried.
 
 ### Branch protection
 

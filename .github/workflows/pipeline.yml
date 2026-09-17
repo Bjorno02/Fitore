@@ -14,11 +14,14 @@ env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
   TARGET_ENV: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+  IS_MAIN: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
 
 jobs:
   build:
-    name: App Build
+    name: ${{ github.ref == 'refs/heads/main' && 'Build & Deploy Candidate' || 'App Build' }}
     runs-on: ubuntu-latest
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -36,6 +39,14 @@ jobs:
         if: env.SENTRY_AUTH_TOKEN != ''
         run: echo "SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN" >> .vercel/.env.$TARGET_ENV.local
       - run: vercel build ${{ env.TARGET_ENV == 'production' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
+      # production target, no domain yet; promote job moves traffic
+      - id: deploy
+        if: env.IS_MAIN == 'true'
+        run: |
+          set -o pipefail
+          url=$(vercel deploy --prebuilt --prod --skip-domain --yes --token=${{ secrets.VERCEL_TOKEN }} | tee /dev/stderr | tail -n1)
+          [ -n "$url" ] || { echo "vercel deploy printed no url"; exit 1; }
+          echo "url=$url" >> "$GITHUB_OUTPUT"
 
   unit:
     name: Unit Tests
@@ -114,54 +125,47 @@ jobs:
       - run: npm ci
       - run: npx prisma migrate deploy
 
-  deploy-production:
-    name: Deploy Production
-    needs: migrate
+  smoke:
+    name: Smoke Test
+    needs: [build, migrate]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      URL: ${{ needs.build.outputs.url }}
+      BYPASS: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+    steps:
+      - run: |
+          for i in $(seq 1 10); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' -H "x-vercel-protection-bypass: $BYPASS" "$URL/login")
+            [ "$code" = "200" ] && break
+            sleep 6
+          done
+          echo "login: $code"; [ "$code" = "200" ]
+      - run: |
+          out=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' -H "x-vercel-protection-bypass: $BYPASS" "$URL/")
+          echo "home signed out: $out"; [ "$out" = "307 $URL/login" ]
+      - run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' -H "x-vercel-protection-bypass: $BYPASS" -X POST -H 'content-type: application/json' -d '{}' "$URL/api/sessions")
+          echo "api/sessions unauthenticated: $code"; [ "$code" = "401" ]
+      - run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' -H "x-vercel-protection-bypass: $BYPASS" "$URL/api/dashboard/summary")
+          echo "api/dashboard/summary unauthenticated: $code"; [ "$code" = "401" ]
+
+  promote:
+    name: Promote to Production
+    needs: [build, smoke]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: production
       url: https://fitore.vercel.app
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
       - run: npm install -g vercel@59
-      - run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-      # secret vars pull as placeholder; prisma generate needs some url
-      - run: |
-          sed -i '/="\[SENSITIVE\]"$/d' .vercel/.env.production.local
-          echo 'DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy' >> .vercel/.env.production.local
-      - env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-        if: env.SENTRY_AUTH_TOKEN != ''
-        run: echo "SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN" >> .vercel/.env.production.local
-      # prebuilt output is not portable, build and deploy on one runner
-      - run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-      - run: vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
-
-  smoke:
-    name: Smoke Test
-    needs: deploy-production
-    runs-on: ubuntu-latest
-    env:
-      URL: https://fitore.vercel.app
-    steps:
+      - run: vercel promote ${{ needs.build.outputs.url }} --yes --token=${{ secrets.VERCEL_TOKEN }}
       - run: |
           for i in $(seq 1 10); do
-            code=$(curl -s -o /dev/null -w '%{http_code}' "$URL/login")
+            code=$(curl -s -o /dev/null -w '%{http_code}' https://fitore.vercel.app/login)
             [ "$code" = "200" ] && break
             sleep 6
           done
-          echo "login: $code"; [ "$code" = "200" ]
-      - run: |
-          out=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "$URL/")
-          echo "home signed out: $out"; [ "$out" = "307 $URL/login" ]
-      - run: |
-          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'content-type: application/json' -d '{}' "$URL/api/sessions")
-          echo "api/sessions unauthenticated: $code"; [ "$code" = "401" ]
-      - run: |
-          code=$(curl -s -o /dev/null -w '%{http_code}' "$URL/api/dashboard/summary")
-          echo "api/dashboard/summary unauthenticated: $code"; [ "$code" = "401" ]
+          echo "domain after promote: $code"; [ "$code" = "200" ]
