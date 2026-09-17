@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "test:pipeline": "node --test scripts/ci/*.test.mjs",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "postinstall": "prisma generate"

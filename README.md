@@ -136,6 +136,7 @@ Migration history is committed under `prisma/migrations/` — do not delete or r
 | `npm start` | Start the production build locally |
 | `npm run lint` | Run ESLint |
 | `npm test` | Run Vitest once |
+| `npm run test:pipeline` | Test baseline resolution and migration-gate safeguards |
 | `npm run test:watch` | Run Vitest in watch mode |
 | `npm run test:e2e` | Run Playwright e2e (auto-starts dev server if not running) |
 
@@ -174,7 +175,7 @@ End-to-end tests live in `e2e/` (21 cases across six suites). Most lock down the
 npm run test:e2e           # auto-starts dev server on :3000 if none is running
 ```
 
-Authenticated-flow coverage (signup → onboard → log session → view history) is not yet written.
+Interactive signup/onboarding coverage is not yet written. The separate migration compatibility gate uses seeded database-backed sessions to check authenticated training-session/check-in reads and writes, permissions, and history across a schema upgrade.
 
 ---
 
@@ -184,10 +185,10 @@ Authenticated-flow coverage (signup → onboard → log session → view history
 MartialOps/
 ├── .github/
 │   └── workflows/
-│       └── pipeline.yml           # build+deploy candidate ∥ unit → e2e → migrate → smoke → promote (see CI/CD)
+│       └── pipeline.yml           # compatibility + build/unit/e2e → migrate → smoke → promote
 ├── vercel.json                    # disables Vercel's own deploys of main; the pipeline deploys production
 ├── docker-compose.yml             # local Postgres 16 on :5432
-├── docs/                          # (gitignored) local dev notes
+├── docs/                          # gitignored local notes, including the pipeline guide
 ├── prisma/
 │   ├── schema.prisma              # 9 models: User, Gym, Membership, TrainingSession, CheckIn, InviteCode, GymSettings + NextAuth (Account, Session)
 │   ├── migrations/                # committed migration history
@@ -284,7 +285,7 @@ Typographic system uses Barlow (display, 800) for brutalist headings and Jakarta
 5. Create a Neon project with two branches, `production` and `preview`, and set `DATABASE_URL` per Vercel environment so Preview never touches production data.
 6. Set up the GitHub secrets and environments listed under [CI/CD](#cicd). Production is deployed by the pipeline on push to `main`; Vercel's own Git integration only builds previews for other branches, because `vercel.json` disables it for `main`.
 
-**Migrations** are not part of the build. The pipeline's Migrate stage runs `prisma migrate deploy` after the tests pass and before the candidate deployment is smoke-tested and promoted, so a failing migration blocks the promotion and the bad code never reaches production. The build itself never opens a database connection.
+**Migrations** are not part of the Vercel build. Before applying them to a shared database, the pipeline rehearses the upgrade on disposable Postgres using the currently deployed app and the candidate. Production migrations still affect the live database immediately; a failed smoke test or application rollback does not undo them. Use backward-compatible migrations and separate releases for removing old schema. The gate needs the live deployment's source commit, which the Vercel CLI records in deployment metadata on every pipeline deploy; a production deployment without it fails the gate until it is redeployed through the pipeline.
 
 ---
 
@@ -293,23 +294,26 @@ Typographic system uses Barlow (display, 800) for brutalist headings and Jakarta
 `.github/workflows/pipeline.yml` is a single workflow. On a push to `main` the Actions run page draws it as:
 
 ```
-Build & Deploy Candidate ─┐
-                          ├─→ End-to-End Tests → Migrate → Smoke Test → Promote to Production
-Unit Tests ───────────────┘
+Production Baseline → Migration Compatibility ──────────┐
+                                                       ├→ Migrate → Smoke → Promote
+Build & Deploy Candidate ─┐                            │
+                          ├→ End-to-End Tests ──────────┘
+Unit Tests ────────────────┘
 ```
 
-On a pull request the first box is called App Build and the run stops after Migrate.
+On a pull request the build job is called App Build and the run stops after migrating the shared preview database. Manual dispatch performs validation only; it never migrates shared databases, uploads a candidate, or promotes a deployment.
 
-The shape is deploy-then-promote: the app is built exactly once, deployed to Vercel as a production-target deployment that receives no traffic, verified in place, and only then does the production domain move to it. If verification fails, production is untouched and there is nothing to roll back.
+The production artifact is built and uploaded once, smoke-tested at its candidate URL, and promoted without rebuilding. The compatibility gate separately builds the deployed source and candidate source against a local database. A failed candidate smoke test leaves the production domain on the previous app, but database migrations already applied remain in place. Candidate-URL access depends on Vercel Deployment Protection; `--skip-domain` only prevents domain assignment.
 
-1. **Build & Deploy Candidate** (`App Build` on PRs) — `vercel pull` + `vercel build`. Secret-type Vercel variables arrive from `vercel pull` as the placeholder `[SENSITIVE]`, so the job strips those lines before building and sets a dummy `DATABASE_URL` because `prisma generate` refuses to run without one; every build-time consumer (Upstash client, Sentry upload) must tolerate the variable being unset. Runtime on Vercel still gets the real values. The build never connects to a database. On `main` the job then runs `vercel deploy --prebuilt --prod --skip-domain`, which uploads the build as a production deployment without pointing `fitore.vercel.app` at it, and passes the deployment URL to later jobs. On PRs it is a compile check only.
-2. **Unit Tests** — `prisma generate`, `tsc --noEmit`, `eslint`, `vitest`. Runs in parallel with the build.
+1. **Build & Deploy Candidate** (`App Build` on PRs) — `vercel pull` + `vercel build`. Secret-type Vercel variables arrive from `vercel pull` as the placeholder `[SENSITIVE]`, so the job strips those lines before building and sets a dummy `DATABASE_URL` because `prisma generate` refuses to run without one; every build-time consumer (Upstash client, Sentry upload) must tolerate the variable being unset. Runtime on Vercel still gets the real values. The build is intended not to connect to a database. On a push to `main`, the job then runs `vercel deploy --prebuilt --prod --skip-domain`, records the source SHA in deployment metadata, and passes the candidate URL to later jobs without moving the production domain. PRs and manual runs perform a compile check only.
+2. **Unit Tests** — `prisma generate`, `tsc --noEmit`, `eslint`, `vitest`, and pipeline script tests. Runs in parallel with the build.
 3. **End-to-End Tests** — Postgres 16 service, `prisma migrate deploy`, Chromium, Playwright suites. On failure the job uploads a `playwright-report` artifact (HTML report plus traces and screenshots of the failing tests, kept 7 days); download it from the run's Summary page and open `index.html`, or run `npx playwright show-report <folder>`.
-4. **Migrate** — `prisma migrate deploy` against the `preview` Neon branch on PRs and the `production` branch on `main`. The connection string comes from a GitHub environment secret, so Vercel's own `DATABASE_URL` can stay type Secret.
-5. **Smoke Test** (`main` only) — hits the candidate deployment URL with the Deployment Protection bypass header. `/login` must return 200 (retried for up to a minute while the deployment warms), `/` must 307 to `/login` for a signed-out visitor, and `POST /api/sessions` and `GET /api/dashboard/summary` must return 401. This is the deployed build with its real runtime environment and the freshly migrated production database, checked before any user can reach it.
-6. **Promote to Production** (`main` only) — `vercel promote <candidate-url>`. Moves `fitore.vercel.app` to the verified deployment in seconds, with no rebuild, then confirms the domain answers. Runs under the `production` GitHub environment.
+4. **Production Baseline → Migration Compatibility** — resolves the deployment currently assigned to `fitore.vercel.app` and checks out its source SHA. Checks that the deployed migration history is an unchanged prefix of the candidate's and stops there when the candidate adds no migrations. Otherwise it applies the deployed migrations and synthetic fixtures to disposable Postgres, then applies the candidate migrations and exercises authenticated reads/writes through both app versions in production mode. Checks existing data and permissions, immutable migration history, and whether the deployed app can read candidate-written data. Missing baseline metadata fails the gate.
+5. **Migrate** — waits for E2E and Migration Compatibility. Runs `prisma migrate deploy` against the shared `preview` database on PRs and `production` on main pushes. Production's deployment ID/SHA must still match the tested baseline. The database URL comes from a GitHub environment secret.
+6. **Smoke Test** (main pushes only) — hits the candidate deployment URL with the protection bypass header. Checks `/login` returns 200, `/` redirects to `/login`, and two unauthenticated API requests return 401. These signed-out checks do not exercise database queries or Google OAuth.
+7. **Promote to Production** (main pushes only) — rechecks the baseline, then runs `vercel promote <candidate-url>` and checks the production domain's login page. Runs under the `production` GitHub environment. A failed post-promotion check does not automatically roll back.
 
-In-progress PR runs are cancelled by a newer push to the same branch; runs on `main` are never cancelled.
+In-progress PR runs are cancelled by newer runs of the same PR. Main runs do not cancel an already running release, but GitHub can replace pending runs in the concurrency group.
 
 ### Required GitHub secrets
 
@@ -317,7 +321,7 @@ Repository secrets (Settings → Secrets and variables → Actions):
 
 | Secret | Source |
 |---|---|
-| `VERCEL_TOKEN` | Vercel → Account Settings → Tokens, scope Full Account |
+| `VERCEL_TOKEN` | Vercel token with access to read the live deployment and build/deploy/promote this project; use the narrowest suitable scope |
 | `VERCEL_ORG_ID` | `.vercel/project.json` → `orgId` after `vercel link` |
 | `VERCEL_PROJECT_ID` | `.vercel/project.json` → `projectId` after `vercel link` |
 | `VERCEL_AUTOMATION_BYPASS_SECRET` | Vercel → Project Settings → Deployment Protection → Protection Bypass for Automation. Lets the smoke test reach the candidate URL, which is otherwise behind Vercel SSO |
@@ -332,13 +336,13 @@ Environment secrets (Settings → Environments), one per environment, both named
 
 ### Vercel
 
-`vercel.json` sets `git.deploymentEnabled.main = false` so Vercel's own integration no longer deploys `main` on push; the pipeline is the only path to production. Preview deploys for other branches are unchanged.
+`vercel.json` sets `git.deploymentEnabled.main = false` so Vercel's own integration no longer deploys `main` on push; the pipeline is the automatic path to production. Manual Vercel deployments remain possible and should not overlap a release. Preview deploys for other branches are unchanged.
 
 Vercel's `DATABASE_URL` is read only at runtime, so keep it type **Secret**. Preview and Production must point at different Neon branches; the pipeline migrates each one separately.
 
 ### Rolling back
 
-Rarely needed, since a candidate that fails its smoke test is never promoted. If something slips through anyway:
+Choose a previous deployment that is compatible with the current database schema and data. Rolling back the app does not undo migrations; arbitrary older deployments are not certified by the compatibility gate.
 
 ```
 vercel ls fitore --prod              # find the previous Ready deployment
@@ -349,7 +353,7 @@ Name the deployment; the bare `vercel rollback` did nothing when tried.
 
 ### Branch protection
 
-Require the `App Build`, `Unit Tests`, `End-to-End Tests`, and `Migrate` checks on `main` so a PR cannot merge until they pass.
+Require the `App Build`, `Unit Tests`, `End-to-End Tests`, `Migration Compatibility`, and `Migrate` checks on `main` so a PR cannot merge until they pass.
 
 ---
 

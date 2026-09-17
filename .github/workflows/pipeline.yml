@@ -6,17 +6,37 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: pipeline-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
   TARGET_ENV: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
   IS_MAIN: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+  PRODUCTION_DOMAIN: fitore.vercel.app
 
 jobs:
+  baseline:
+    name: Production Baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      id: ${{ steps.production.outputs.id }}
+      sha: ${{ steps.production.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - id: production
+        run: node scripts/ci/production-baseline.mjs
+
   build:
     name: ${{ github.ref == 'refs/heads/main' && 'Build & Deploy Candidate' || 'App Build' }}
     runs-on: ubuntu-latest
@@ -29,7 +49,7 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm install -g vercel@59
-      - run: vercel pull --yes --environment=$TARGET_ENV --token=${{ secrets.VERCEL_TOKEN }}
+      - run: vercel pull --yes --environment=$TARGET_ENV
       # secret vars pull as placeholder; prisma generate needs some url
       - run: |
           sed -i '/="\[SENSITIVE\]"$/d' .vercel/.env.$TARGET_ENV.local
@@ -38,13 +58,13 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         if: env.SENTRY_AUTH_TOKEN != ''
         run: echo "SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN" >> .vercel/.env.$TARGET_ENV.local
-      - run: vercel build ${{ env.TARGET_ENV == 'production' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
+      - run: vercel build ${{ env.TARGET_ENV == 'production' && '--prod' || '' }}
       # production target, no domain yet; promote job moves traffic
       - id: deploy
         if: env.IS_MAIN == 'true'
         run: |
           set -o pipefail
-          url=$(vercel deploy --prebuilt --prod --skip-domain --yes --token=${{ secrets.VERCEL_TOKEN }} | tee /dev/stderr | tail -n1)
+          url=$(vercel deploy --prebuilt --prod --skip-domain --meta pipelineCommitSha="$GITHUB_SHA" --yes | tee /dev/stderr | tail -n1)
           [ -n "$url" ] || { echo "vercel deploy printed no url"; exit 1; }
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
@@ -64,6 +84,55 @@ jobs:
       - run: npx tsc --noEmit
       - run: npm run lint
       - run: npm test
+      - run: npm run test:pipeline
+
+  migration-compatibility:
+    name: Migration Compatibility
+    needs: baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: migration_compatibility
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d migration_compatibility"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/migration_compatibility
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: candidate
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.baseline.outputs.sha }}
+          path: deployed
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            candidate/package-lock.json
+            deployed/package-lock.json
+      - id: history
+        run: node candidate/scripts/ci/migration-history.mjs deployed candidate
+      - if: steps.history.outputs.added != '0'
+        run: npm ci
+        working-directory: deployed
+      - if: steps.history.outputs.added != '0'
+        run: npm ci
+        working-directory: candidate
+      - name: Rehearse upgrade with the deployed and candidate apps
+        if: steps.history.outputs.added != '0'
+        run: node candidate/scripts/ci/migration-compatibility.mjs deployed candidate
 
   e2e:
     name: End-to-End Tests
@@ -110,7 +179,8 @@ jobs:
 
   migrate:
     name: Migrate
-    needs: e2e
+    needs: [e2e, migration-compatibility, baseline]
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     environment:
       name: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
@@ -123,6 +193,12 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - name: Confirm production still matches the tested baseline
+        if: env.IS_MAIN == 'true'
+        env:
+          EXPECTED_DEPLOYMENT_ID: ${{ needs.baseline.outputs.id }}
+          EXPECTED_DEPLOYMENT_SHA: ${{ needs.baseline.outputs.sha }}
+        run: node scripts/ci/production-baseline.mjs
       - run: npx prisma migrate deploy
 
   smoke:
@@ -153,18 +229,27 @@ jobs:
 
   promote:
     name: Promote to Production
-    needs: [build, smoke]
+    needs: [build, smoke, baseline]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: production
-      url: https://fitore.vercel.app
+      url: https://${{ env.PRODUCTION_DOMAIN }}
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
       - run: npm install -g vercel@59
-      - run: vercel promote ${{ needs.build.outputs.url }} --yes --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Confirm production still matches the tested baseline
+        env:
+          EXPECTED_DEPLOYMENT_ID: ${{ needs.baseline.outputs.id }}
+          EXPECTED_DEPLOYMENT_SHA: ${{ needs.baseline.outputs.sha }}
+        run: node scripts/ci/production-baseline.mjs
+      - run: vercel promote ${{ needs.build.outputs.url }} --yes
       - run: |
           for i in $(seq 1 10); do
-            code=$(curl -s -o /dev/null -w '%{http_code}' https://fitore.vercel.app/login)
+            code=$(curl -s -o /dev/null -w '%{http_code}' "https://$PRODUCTION_DOMAIN/login")
             [ "$code" = "200" ] && break
             sleep 6
           done
