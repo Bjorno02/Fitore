@@ -39,6 +39,7 @@ jobs:
 
   unit:
     name: Unit Tests
+    needs: build
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
@@ -56,7 +57,7 @@ jobs:
 
   e2e:
     name: End-to-End Tests
-    needs: [build, unit]
+    needs: build
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -99,7 +100,7 @@ jobs:
 
   migrate:
     name: Migrate
-    needs: e2e
+    needs: [unit, e2e]
     runs-on: ubuntu-latest
     environment:
       name: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
